@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://7hs6n12w7nh4"]
+
+[ext_resource type="Script" path="res://CustomGraphNode.cs" id="1_cjs1f"]
+
+[node name="Omniode" type="GraphNode"]
+title = "Sample"
+script = ExtResource("1_cjs1f")
