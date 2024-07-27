@@ -5,11 +5,12 @@ using NodeGraphEditor.GraphNodes;
 namespace NodeGraphEditor.Editor;
 
 // todo - split into two classes
-internal sealed class DefaultOutPortControl<T>(OutputSlot<T> slot) : PortControl(slot)
+internal sealed class DefaultOutPortControl<T> : PortControl
 {
     protected override Control CreateControl()
     {
         var toStringMethod = ToStringMethods.Get<T>();
+        var slot = GetSlot<OutputSlot<T>>();
         var str = toStringMethod(slot.Value);
         var textDisplay = DefaultTextDisplay.CreateLineEdit(str, HorizontalAlignment.Right);
         textDisplay.Control.Editable = false;
@@ -21,7 +22,7 @@ internal sealed class DefaultOutPortControl<T>(OutputSlot<T> slot) : PortControl
 
     protected override void OnDispose()
     {
-        slot.ValueChanged -= _valueChanged;
+        GetSlot<OutputSlot<T>>().ValueChanged -= _valueChanged;
         _displayLabel?.Dispose();
     }
 

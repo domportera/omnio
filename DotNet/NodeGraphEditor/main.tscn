@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://c7tqhhapin30n"]
 
 [ext_resource type="Script" path="res://GraphEditor.cs" id="1_npapd"]
-[ext_resource type="PackedScene" uid="uid://7hs6n12w7nh4" path="res://Engine/GraphNodeScene.tscn" id="2_vb4me"]
+[ext_resource type="PackedScene" uid="uid://d1px7vgdfy8t" path="res://Engine/GraphNode.tscn" id="2_oonug"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -20,4 +20,4 @@ grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(1.03621, 1.01661)
 script = ExtResource("1_npapd")
-_template = ExtResource("2_vb4me")
+_template = ExtResource("2_oonug")

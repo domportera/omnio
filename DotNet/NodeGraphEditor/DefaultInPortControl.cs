@@ -1,17 +1,11 @@
 ﻿using System;
 using Godot;
 using NodeGraphEditor.Engine;
-using NodeGraphEditor.GraphNodes;
 
 namespace NodeGraphEditor.Editor;
 
 internal sealed class DefaultInPortControl<T> : PortControl
 {
-    public DefaultInPortControl(InputSlot<T> slot) : base(slot)
-    {
-        _slot = slot;
-    }
-
     protected override Control CreateControl()
     {
         if (!FromStringMethods.TryGet<T>(out var stringToValueMethod))
@@ -31,11 +25,12 @@ internal sealed class DefaultInPortControl<T> : PortControl
 
         lineEditDisplay.TextChanged += text =>
         {
-            if (_slot.IsConnected)
+            var slot = GetSlot<InputSlot<T>>();
+            if (slot.IsConnected)
                 return;
 
             if (stringToValueMethod.Invoke(text, out var value))
-                _slot.Value = value;
+                slot.Value = value;
         };
 
 
@@ -46,13 +41,14 @@ internal sealed class DefaultInPortControl<T> : PortControl
     {
         _valueChanged = () =>
         {
-            if (_slot.IsConnected)
+            var slot = GetSlot<InputSlot<T>>();
+            if (slot.IsConnected)
             {
-                _textDisplay!.SetTextSilently(_valueToString(_slot.Value));
+                _textDisplay!.SetTextSilently(_valueToString(slot.Value));
             }
         };
         
-        _slot.ValueChanged += _valueChanged;
+        GetSlot<InputSlot<T>>().ValueChanged += _valueChanged;
        // _slot.ConnectionStateChanged += isConnected =>
         //{
           //  _textDisplay!.Control.Editable = !isConnected;
@@ -61,7 +57,7 @@ internal sealed class DefaultInPortControl<T> : PortControl
 
     protected override void OnDispose()
     {
-        _slot.ValueChanged -= _valueChanged;
+        GetSlot<InputSlot<T>>().ValueChanged -= _valueChanged;
 
         _textDisplay?.Dispose();
     }
@@ -69,6 +65,5 @@ internal sealed class DefaultInPortControl<T> : PortControl
     private readonly ToStringMethod<T> _valueToString = ToStringMethods.Get<T>();
     private ITextDisplay? _textDisplay;
     private Action? _valueChanged;
-    private readonly InputSlot<T> _slot;
 
 }

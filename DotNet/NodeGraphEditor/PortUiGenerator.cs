@@ -78,20 +78,20 @@ internal static class PortUiGenerator
             {
                 case IInputSlot:
                 {
-                    if (!_inputConstructors.TryGetValue(slotType, out constructor!))
+                    if (!InputConstructors.TryGetValue(slotType, out constructor!))
                     {
-                        constructor = GenerateConstructor(slotType);
-                        _inputConstructors[slotType] = constructor;
+                        constructor = GenerateConstructor(slotType, true);
+                        InputConstructors[slotType] = constructor;
                     }
 
                     break;
                 }
                 case IOutputSlot:
                 {
-                    if(!_outputConstructors.TryGetValue(slotType, out constructor!))
+                    if(!OutputConstructors.TryGetValue(slotType, out constructor!))
                     {
-                        constructor = GenerateConstructor(slotType);
-                        _outputConstructors[slotType] = constructor;
+                        constructor = GenerateConstructor(slotType, false);
+                        OutputConstructors[slotType] = constructor;
                     }
 
                     break;
@@ -101,6 +101,7 @@ internal static class PortUiGenerator
             }
 
             var portControl = constructor();
+            portControl.SetSlot(slot);
             var godotControl = portControl.Control;
             godotControl.GrowHorizontal = growDirection;
             godotControl.SetAnchorsPreset(layout);
@@ -108,9 +109,9 @@ internal static class PortUiGenerator
             return portControl;
         }
 
-        static Func<PortControl> GenerateConstructor(Type slotType)
+        static Func<PortControl> GenerateConstructor(Type slotType, bool input)
         {
-            var genericType = typeof(DefaultInPortControl<>);
+            var genericType = input ? typeof(DefaultInPortControl<>) : typeof(DefaultOutPortControl<>);
             var constructedType = genericType.MakeGenericType(slotType.GetGenericArguments());
                 
             // compile this as a constructor expression
@@ -119,6 +120,6 @@ internal static class PortUiGenerator
         }
     }
 
-    private static readonly Dictionary<Type, Func<PortControl>> _inputConstructors;
-    private static readonly Dictionary<Type, Func<PortControl>> _outputConstructors;
+    private static readonly Dictionary<Type, Func<PortControl>> InputConstructors = new();
+    private static readonly Dictionary<Type, Func<PortControl>> OutputConstructors = new();
 }

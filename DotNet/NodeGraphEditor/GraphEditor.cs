@@ -1,5 +1,7 @@
-﻿using Godot;
+﻿using System;
+using Godot;
 using NodeGraphEditor.GraphNodes;
+using NodeGraphEditor.NodeImplementations;
 using OperatorCore;
 
 namespace NodeGraphEditor.Editor;
@@ -35,27 +37,48 @@ public partial class GraphEditor : GraphEdit
     public override void _Input(InputEvent @event)
     {
         base._Input(@event);
-        if (@event is not InputEventMouseButton { Pressed: true } mouse) 
-            return;
-        
+
         NodeGraphEditor.CustomGraphNode? node = null;
         GraphNodeLogic? nodeLogic = null;
-        if ((mouse.ButtonMask & MouseButtonMask.MbXbutton2) != 0)
+        if (@event is InputEventKey { Pressed: true } key)
         {
-            // create a new node
-            node = Instantiate();
-          //  nodeLogic = new TestNode()
-          //  {
-             //   InstanceId = Guid.NewGuid()
-           // };
-        }
-        else if ((mouse.ButtonMask & MouseButtonMask.MbXbutton1) != 0)
-        {
-            node = Instantiate();
-           // nodeLogic = new CountSeconds
+            switch (key.Keycode)
             {
-              //  InstanceId = Guid.NewGuid()
-            };
+                case Key.Pageup:
+                    node = Instantiate();
+                    nodeLogic = new CountSeconds
+                    {
+                        InstanceId = Guid.NewGuid()
+                    };
+                    break;
+                case Key.Pagedown:
+                    node = Instantiate();
+                    nodeLogic = new TestNode
+                    {
+                        InstanceId = Guid.NewGuid()
+                    };
+                    break;
+            }
+        }
+        else if (@event is InputEventMouseButton { Pressed: true } mouse)
+        {
+            if ((mouse.ButtonMask & MouseButtonMask.MbXbutton2) != 0)
+            {
+                // create a new node
+                node = Instantiate();
+                nodeLogic = new TestNode()
+                {
+                    InstanceId = Guid.NewGuid()
+                };
+            }
+            else if ((mouse.ButtonMask & MouseButtonMask.MbXbutton1) != 0)
+            {
+                node = Instantiate();
+                nodeLogic = new CountSeconds
+                {
+                    InstanceId = Guid.NewGuid()
+                };
+            }
         }
 
         if (nodeLogic != null)

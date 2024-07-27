@@ -10,11 +10,6 @@ public abstract class PortControl
 
     private Control? _control;
 
-    protected PortControl(ISlot slot)
-    {
-        _slot = slot;
-    }
-
     private Control InitializeControl()
     {
         // format name, for example "_mySlotName" -> "MySlotName"
@@ -66,10 +61,26 @@ public abstract class PortControl
 
     protected abstract Control CreateControl();
 
-    private readonly ISlot _slot;
+    private ISlot _slot;
     private bool _isDisposed;
 
     private const string NameFmt = "{0} ({1})";
+
+    public void SetSlot(ISlot slot)
+    {
+        if(_slot != null)
+            throw new InvalidOperationException("Slot already set");
+        
+        _slot = slot;
+    }
+
+    protected T GetSlot<T>() where T : ISlot
+    {
+        if (_slot is T slot)
+            return slot;
+
+        throw new InvalidOperationException($"Slot is not of type {typeof(T)}");
+    }
 }
 
 internal static class SlotControlExtensionMethods
