@@ -21,8 +21,25 @@ public abstract class GraphNodeLogic
         {
             _instanceId = value;
             var byteSpan = new ReadOnlySpan<byte>(&value, sizeof(Guid));
-            StringKey = Convert.ToBase64String(byteSpan); // save some space by converting to base64 (32 chars -> 22 chars)
+            var key = Convert.ToBase64String(byteSpan); // save some space by converting to base64 (32 chars -> 22 chars)
+            ReplaceChar(key, '/', '_'); // replace any '/' with '_' as '/' is not a valid character in node name
+            StringKey = key;
+
             Init();
+        }
+    }
+
+    private static unsafe void ReplaceChar(string str, char toReplace, char replaceWith)
+    {
+        // replace any '/' with '_'
+        var length = str.Length;
+        fixed (char* pKey = str)
+        {
+            for (var i = 0; i < length; i++)
+            {
+                if (pKey[i] == toReplace)
+                    pKey[i] = replaceWith;
+            }
         }
     }
 

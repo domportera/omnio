@@ -16,8 +16,8 @@ public sealed partial class CustomGraphNode : GraphNode
             throw new System.InvalidOperationException("Node already has a logic definition");
         
         _logic = nodeLogic;
-        SetName(_logic!.StringKey);
-        SetTitle(_logic.GetType().Name);
+        SetName(nodeLogic.StringKey);
+        SetTitle(nodeLogic.GetType().Name);
         var slotDefinitions = _logic!.GetSlotDefinitions();
         SetSlots(slotDefinitions);
         _logic.SetReady();
@@ -82,4 +82,13 @@ public sealed partial class CustomGraphNode : GraphNode
     private List<PortControl>? _portControls;
     private IInputSlot?[]? _inputSlots;
     private IOutputSlot?[]? _outputSlots;
+
+    public ISlot GetPort(long fromPort)
+    {
+        for(int i = 0; i < _inputSlots!.Length; i++)
+        {
+        }
+
+        return null;
+    }
 }
