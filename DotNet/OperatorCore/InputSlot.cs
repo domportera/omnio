@@ -48,17 +48,16 @@ public sealed class InputSlot<T>(ushort id, T value) : IInputSlot<T>, IInputSlot
 
     bool IInputSlot.TryConnectTo(IOutputSlot outputSlot)
     {
-        if (outputSlot.TryConnectTo(this))
-        {
-            if (_connectedOutputSlot != null)
-                ReleaseConnection();
+        if (!outputSlot.TryConnectTo(this)) 
+            return false;
+        
+        if (_connectedOutputSlot != null)
+            ReleaseConnection();
 
-            _connectedOutputSlot = outputSlot;
-            ConnectionStateChanged?.Invoke(true);
-            return true;
-        }
+        _connectedOutputSlot = outputSlot;
+        ConnectionStateChanged?.Invoke(true);
+        return true;
 
-        return false;
     }
 
     void ISlot.DisconnectAll() => ((IInputSlot)this).ReleaseConnection();
