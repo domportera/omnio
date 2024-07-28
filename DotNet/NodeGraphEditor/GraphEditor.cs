@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 using Godot;
-using NodeGraphEditor.GraphNodes;
 using NodeGraphEditor.NodeImplementations;
 using OperatorCore;
 
@@ -15,13 +14,15 @@ public partial class GraphEditor : GraphEdit
     public override void _Ready()
     {
         base._Ready();
+        RightDisconnects = true;
+        
         //BeginNodeMove += _OnBeginNodeMove;
         //EndNodeMove += _OnEndNodeMove;
         //NodeSelected += _OnNodeSelected;
         //NodeDeselected += _OnNodeDeselected;
         //
         ConnectionRequest += _OnConnectionRequest;
-        //DisconnectionRequest += _OnDisconnectionRequest;
+        DisconnectionRequest += _OnDisconnectionRequest;
         //ConnectionToEmpty += _OnConnectionToEmpty;
         //ConnectionFromEmpty += _OnConnectionFromEmpty;
         //ConnectionDragStarted += _OnConnectionDragStarted;
@@ -29,18 +30,36 @@ public partial class GraphEditor : GraphEdit
         //
         //CopyNodesRequest += _OnCopyNodesRequest;
         //PasteNodesRequest += _OnPasteNodesRequest;
-        //DeleteNodesRequest += _OnDeleteNodesRequest;
+        DeleteNodesRequest += _OnDeleteNodesRequest;
         //DuplicateNodesRequest += _OnDuplicateNodesRequest;;
         //
         //PopupRequest += _OnPopupRequest;
         //ScrollOffsetChanged += _OnScrollOffsetChanged;
     }
 
+    private void _OnDeleteNodesRequest(Godot.Collections.Array nodes)
+    {
+        Console.WriteLine($"Deleting {nodes.Count} nodes");
+        foreach (var node in nodes)
+        {
+            if (node.Obj is not StringName name) continue;
+            
+            if (!_nodes.Remove(name.ToString(), out var customNode))
+            {
+                Console.WriteLine($"Node '{name}' not found");
+                continue;
+            }
+            
+            customNode.ReleaseGraphNode();
+            customNode.QueueFree();
+        }
+    }
+
     public override void _Input(InputEvent @event)
     {
         base._Input(@event);
 
-        NodeGraphEditor.CustomGraphNode? node = null;
+        CustomGraphNode? node = null;
         GraphNodeLogic? nodeLogic = null;
         if (@event is InputEventKey { Pressed: true } key)
         {
@@ -90,7 +109,7 @@ public partial class GraphEditor : GraphEdit
 
             var mousePos = GetViewport().GetMousePosition();
             node.PositionOffset = mousePos;
-            
+
             OnNodeCreated(node, nodeLogic);
         }
 
@@ -104,31 +123,57 @@ public partial class GraphEditor : GraphEdit
         _nodes.Add(nodeLogic.StringKey, node);
     }
 
-    private void _OnConnectionRequest(StringName fromnode, long fromport, StringName tonode, long toport)
+    // todo: allow dynamic type checking
+    private void _OnConnectionRequest(StringName fromNodeName, long fromPortIndex, StringName toNodeName,
+        long toPortIndex)
     {
-        var fromNodeName = fromnode.ToString();
-        if(!_nodes.TryGetValue(fromNodeName, out var fromNode))
-        {
-            Console.WriteLine($"Node '{fromNodeName}' not found");
+        if (!TryGetFromToPorts(fromNodeName, fromPortIndex, toNodeName, toPortIndex, out var fromSlot, out var toSlot)) 
             return;
-        }
-        
-        var toNodeName = tonode.ToString();
-        if(!_nodes.TryGetValue(toNodeName, out var toNode))
-        {
-            Console.WriteLine($"Node '{toNodeName}' not found");
-            return;
-        }
-        
-        
-        Console.WriteLine($"Connection request from {fromNode} ({fromnode}) port {fromport} to {toNode} ({tonode}) port {toport}");
 
-      //  var fromSlot = fromNode.GetPort(fromPort);
-      //  var toSlot = toNode.GetPort(toPort);
-        
-       // ConnectNode(fromnode, (int)fromport, tonode, (int)toport);
+        if (toSlot.TryConnectTo(fromSlot))
+        {
+            ConnectNode(fromNodeName, (int)fromPortIndex, toNodeName, (int)toPortIndex);
+        }
+    }
+    
+    private readonly record struct ConnectionRequestData();
+
+    private bool TryGetFromToPorts(StringName fromNodeName, long fromPortIndex, StringName toNodeName, long toPortIndex, 
+        [NotNullWhen(true)] out IOutputSlot? fromSlot, 
+        [NotNullWhen(true)] out IInputSlot? toSlot)
+    {
+        var fromNodeNameStr = fromNodeName.ToString();
+        if (!_nodes.TryGetValue(fromNodeNameStr, out var fromNode))
+        {
+            Console.WriteLine($"Node '{fromNodeNameStr}' not found");
+            fromSlot = null;
+            toSlot = null;
+            return false;
+        }
+
+        var toNodeNameStr = toNodeName.ToString();
+        if (!_nodes.TryGetValue(toNodeNameStr, out var toNode))
+        {
+            Console.WriteLine($"Node '{toNodeNameStr}' not found");
+            fromSlot = null;
+            toSlot = null;
+            return false;
+        }
+
+        fromSlot = fromNode.GetOutputPort((int)fromPortIndex);
+        toSlot = toNode.GetInputPort((int)toPortIndex);
+        return true;
     }
 
+
+    private void _OnDisconnectionRequest(StringName fromNodeName, long fromPortId, StringName toNodeName, long toPortId)
+    {
+        if (!TryGetFromToPorts(fromNodeName, fromPortId, toNodeName, toPortId, out _, out var toSlot))
+            return;
+
+        toSlot.ReleaseConnection();
+        DisconnectNode(fromNodeName, (int)fromPortId, toNodeName, (int)toPortId);
+    }
 
     //public override void _Process(double delta)
     //{
@@ -159,6 +204,6 @@ public partial class GraphEditor : GraphEdit
     //{
     //    return base.HasGodotClassSignal(in signal);
     //}
-    
+
     private readonly Dictionary<string, CustomGraphNode> _nodes = new();
 }

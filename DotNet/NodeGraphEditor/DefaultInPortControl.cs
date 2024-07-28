@@ -36,7 +36,7 @@ internal sealed class DefaultInPortControl<T> : PortControl
 
         return lineEditDisplay.Control;
     }
-    
+
     private void LinkSlotToDisplay()
     {
         _valueChanged = () =>
@@ -47,17 +47,23 @@ internal sealed class DefaultInPortControl<T> : PortControl
                 _textDisplay!.SetTextSilently(_valueToString(slot.Value));
             }
         };
-        
-        GetSlot<InputSlot<T>>().ValueChanged += _valueChanged;
-       // _slot.ConnectionStateChanged += isConnected =>
-        //{
-          //  _textDisplay!.Control.Editable = !isConnected;
-        //};
+
+        _connectionStateChanged = isConnected =>
+        {
+            if (isConnected) // unnecessary check, but it's here for clarity and future-proofing
+                _valueChanged!.Invoke();
+        };
+
+        var slot = GetSlot<InputSlot<T>>();
+        slot.ValueChanged += _valueChanged;
+        slot.ConnectionStateChanged += _connectionStateChanged;
     }
 
     protected override void OnDispose()
     {
-        GetSlot<InputSlot<T>>().ValueChanged -= _valueChanged;
+        var slot = GetSlot<InputSlot<T>>();
+        slot.ValueChanged -= _valueChanged;
+        slot.ConnectionStateChanged -= _connectionStateChanged;
 
         _textDisplay?.Dispose();
     }
@@ -65,5 +71,5 @@ internal sealed class DefaultInPortControl<T> : PortControl
     private readonly ToStringMethod<T> _valueToString = ToStringMethods.Get<T>();
     private ITextDisplay? _textDisplay;
     private Action? _valueChanged;
-
+    private Action<bool>? _connectionStateChanged;
 }

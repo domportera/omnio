@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using NodeGraphEditor.Editor;
@@ -83,12 +84,44 @@ public sealed partial class CustomGraphNode : GraphNode
     private IInputSlot?[]? _inputSlots;
     private IOutputSlot?[]? _outputSlots;
 
-    public ISlot GetPort(long fromPort)
+    internal IInputSlot GetInputPort(int fromPort)
     {
-        for(int i = 0; i < _inputSlots!.Length; i++)
-        {
-        }
+        return GetAtIndex(fromPort, _inputSlots!)!;
+    }
+    
+    internal IOutputSlot GetOutputPort(int fromPort)
+    {
+        return GetAtIndex(fromPort, _outputSlots!)!;
+    }
+    private static T GetAtIndex<T>(int fromPort, T[] collection)
+    {
+        if(fromPort < 0 || fromPort >= collection!.Length)
+            throw new System.ArgumentOutOfRangeException(nameof(fromPort));
+        
+        var port = collection[fromPort]!;
 
-        return null;
+        if(port == null)
+            throw new System.InvalidOperationException($"Port {fromPort} is null");
+        
+        return port;
+    }
+
+    public void ReleaseGraphNode()
+    {
+        _logic!.Destroy();
+        foreach (var port in _inputSlots!)
+        {
+            port?.DisconnectAll();
+        }
+        
+        foreach (var port in _outputSlots!)
+        {
+            port?.DisconnectAll();
+        }
+        
+        foreach(var portControl in _portControls!)
+        {
+            portControl.Dispose();
+        }
     }
 }
