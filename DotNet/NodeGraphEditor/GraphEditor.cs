@@ -13,6 +13,8 @@ public partial class GraphEditor : GraphEdit
     [Export] private PackedScene? _template;
     [Export] private UI.TypeInSearch? _typeInSearch;
 
+    private Vector2 _placementPosition;
+
     static GraphEditor()
     {
         NodeImplementations.TypeRegistration.FindAndRegisterTypes();
@@ -85,7 +87,9 @@ public partial class GraphEditor : GraphEdit
         nodeLogic.InstanceId = Guid.NewGuid();
         node.ApplyNode(nodeLogic);
         AddChild(node);
-        OnNodeCreated(node, nodeLogic);
+
+        node.PositionOffset =  (_placementPosition + ScrollOffset) / Zoom;
+        _nodes.Add(nodeLogic.StringKey, node);
     }
 
     private void _OnDeleteNodesRequest(Godot.Collections.Array nodes)
@@ -116,30 +120,32 @@ public partial class GraphEditor : GraphEdit
             switch (key.Keycode)
             {
                 case Key.Tab:
-                    if (!_typeInSearch!.Visible)
-                    {
-                        _typeInSearch.GlobalPosition = GetGlobalMousePosition();
-                        _typeInSearch.Visible = true;
-                        _typeInSearch.GrabFocus();
-                    }
-                    else
-                    {
-                        CloseTypeInSearch(_typeInSearch);
-                    }
-
+                    ToggleNodeSearch();
                     break;
             }
         }
     }
 
-    private CustomGraphNode Instantiate() => _template!.Instantiate<CustomGraphNode>();
-
-    private void OnNodeCreated(CustomGraphNode node, GraphNodeLogic nodeLogic)
+    private void ToggleNodeSearch()
     {
-        var mousePos = GetViewport().GetMousePosition();
-        node.PositionOffset = mousePos;
-        _nodes.Add(nodeLogic.StringKey, node);
+        // if mouse is not over the graph, don't show the search
+        var globalMousePosition = GetGlobalMousePosition();
+        if (!GetGlobalRect().HasPoint(globalMousePosition))
+            return;
+        
+        if (!_typeInSearch!.Visible)
+        {
+            _typeInSearch.GlobalPosition = globalMousePosition;
+            _typeInSearch.Visible = true;
+            _placementPosition = globalMousePosition;
+        }
+        else
+        {
+            CloseTypeInSearch(_typeInSearch);
+        }
     }
+
+    private CustomGraphNode Instantiate() => _template!.Instantiate<CustomGraphNode>();
 
     // todo: allow dynamic type checking
     private void _OnConnectionRequest(StringName fromNodeName, long fromPortIndex, StringName toNodeName,
@@ -153,8 +159,6 @@ public partial class GraphEditor : GraphEdit
             ConnectNode(fromNodeName, (int)fromPortIndex, toNodeName, (int)toPortIndex);
         }
     }
-
-    private readonly record struct ConnectionRequestData();
 
     private bool TryGetFromToPorts(StringName fromNodeName, long fromPortIndex, StringName toNodeName, long toPortIndex,
         [NotNullWhen(true)] out IOutputSlot? fromSlot,

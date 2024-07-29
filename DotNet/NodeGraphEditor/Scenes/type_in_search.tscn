@@ -26,4 +26,3 @@ grow_vertical = 0
 item_count = 3
 item_0/text = "sdfsdfsdfsdfsdf"
 item_2/text = "gggdf"
-script = ExtResource("1_6y3up")
