@@ -13,12 +13,17 @@ public abstract class GraphNodeLogic
     // this is a unique identifier for the instance of the node
     // it is an init property so it does not need to be set in the constructor,
     // which would be both annoying for child-classes and liable to modification by the child classes
-    private readonly Guid _instanceId;
+    private Guid _instanceId = Guid.Empty;
     internal unsafe Guid InstanceId
     {
         get => _instanceId;
-        init
+        set
         {
+            if (_instanceId != Guid.Empty)
+            {
+                throw new InvalidOperationException("Instance ID can only be set once");
+            }
+            
             _instanceId = value;
             var byteSpan = new ReadOnlySpan<byte>(&value, sizeof(Guid));
             var key = Convert.ToBase64String(byteSpan); // save some space by converting to base64 (32 chars -> 22 chars)
@@ -43,7 +48,7 @@ public abstract class GraphNodeLogic
         }
     }
 
-    internal readonly string StringKey = null!;
+    internal string StringKey { get; private set; }
 
     protected internal GraphNodeLogic()
     {

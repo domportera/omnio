@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NodeImplementations", "..\N
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperatorCore", "..\OperatorCore\OperatorCore.csproj", "{18786115-A4A7-434C-BE82-537B0C7EA5FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utilities", "..\Utilities\Utilities.csproj", "{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 	Debug|Any CPU = Debug|Any CPU
@@ -31,5 +33,11 @@ Global
 		{18786115-A4A7-434C-BE82-537B0C7EA5FA}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
 		{18786115-A4A7-434C-BE82-537B0C7EA5FA}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
 		{18786115-A4A7-434C-BE82-537B0C7EA5FA}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+		{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}.ExportDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}.ExportDebug|Any CPU.Build.0 = Debug|Any CPU
+		{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}.ExportRelease|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}.ExportRelease|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Godot;
 using NodeGraphEditor.NodeImplementations;
 using OperatorCore;
@@ -10,12 +11,13 @@ namespace NodeGraphEditor.Editor;
 public partial class GraphEditor : GraphEdit
 {
     [Export] private PackedScene? _template;
+    [Export] private TypeInSearch _typeInSearch;
 
     public override void _Ready()
     {
         base._Ready();
         RightDisconnects = true;
-        
+
         //BeginNodeMove += _OnBeginNodeMove;
         //EndNodeMove += _OnEndNodeMove;
         //NodeSelected += _OnNodeSelected;
@@ -35,6 +37,48 @@ public partial class GraphEditor : GraphEdit
         //
         //PopupRequest += _OnPopupRequest;
         //ScrollOffsetChanged += _OnScrollOffsetChanged;
+
+        _typeInSearch.SetItems(() => TypeCache.GraphNodeLogicTypes.Values
+            .Select(x => x.FullName)
+            .Where(x => x != null)!);
+
+        _typeInSearch.ItemSelected += OnTypeSelected;
+    }
+
+    private void OnTypeSelected(object? _, string selectedTypeName)
+    {
+        var type = TypeCache.GraphNodeLogicTypes[selectedTypeName];
+        CreateNodeOfType(type);
+        CloseTypeInSearch(_typeInSearch);
+    }
+
+    private static void CloseTypeInSearch(TypeInSearch typeInSearch)
+    {
+        typeInSearch.Visible = false;
+        typeInSearch.ReleaseFocus();
+        typeInSearch.Text = "";
+    }
+
+    private void CreateNodeOfType(Type type)
+    {
+        var node = Instantiate();
+        var constructor = NodeConstructorCache.GetDefaultConstructor(type);
+        
+        GraphNodeLogic nodeLogic;
+        try
+        {
+            nodeLogic = constructor();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Failed to create node of type {type.FullName}: {e}");
+            return;
+        }
+
+        nodeLogic.InstanceId = Guid.NewGuid();
+        node.ApplyNode(nodeLogic);
+        AddChild(node);
+        OnNodeCreated(node, nodeLogic);
     }
 
     private void _OnDeleteNodesRequest(Godot.Collections.Array nodes)
@@ -43,13 +87,13 @@ public partial class GraphEditor : GraphEdit
         foreach (var node in nodes)
         {
             if (node.Obj is not StringName name) continue;
-            
+
             if (!_nodes.Remove(name.ToString(), out var customNode))
             {
                 Console.WriteLine($"Node '{name}' not found");
                 continue;
             }
-            
+
             customNode.ReleaseGraphNode();
             customNode.QueueFree();
         }
@@ -58,68 +102,32 @@ public partial class GraphEditor : GraphEdit
     public override void _Input(InputEvent @event)
     {
         base._Input(@event);
-
-        CustomGraphNode? node = null;
-        GraphNodeLogic? nodeLogic = null;
         if (@event is InputEventKey { Pressed: true } key)
         {
             switch (key.Keycode)
             {
-                case Key.Pageup:
-                    node = Instantiate();
-                    nodeLogic = new CountSeconds
+                case Key.Tab:
+                    if (!_typeInSearch.Visible)
                     {
-                        InstanceId = Guid.NewGuid()
-                    };
-                    break;
-                case Key.Pagedown:
-                    node = Instantiate();
-                    nodeLogic = new TestNode
+                        _typeInSearch.Visible = true;
+                        _typeInSearch.GrabFocus();
+                    }
+                    else
                     {
-                        InstanceId = Guid.NewGuid()
-                    };
+                        CloseTypeInSearch(_typeInSearch);
+                    }
+
                     break;
             }
         }
-        else if (@event is InputEventMouseButton { Pressed: true } mouse)
-        {
-            if ((mouse.ButtonMask & MouseButtonMask.MbXbutton2) != 0)
-            {
-                // create a new node
-                node = Instantiate();
-                nodeLogic = new TestNode()
-                {
-                    InstanceId = Guid.NewGuid()
-                };
-            }
-            else if ((mouse.ButtonMask & MouseButtonMask.MbXbutton1) != 0)
-            {
-                node = Instantiate();
-                nodeLogic = new CountSeconds
-                {
-                    InstanceId = Guid.NewGuid()
-                };
-            }
-        }
-
-        if (nodeLogic != null)
-        {
-            node!.ApplyNode(nodeLogic);
-            AddChild(node);
-
-            var mousePos = GetViewport().GetMousePosition();
-            node.PositionOffset = mousePos;
-
-            OnNodeCreated(node, nodeLogic);
-        }
-
-        return;
-
-        CustomGraphNode Instantiate() => _template!.Instantiate<CustomGraphNode>();
     }
+
+    private CustomGraphNode Instantiate() => _template!.Instantiate<CustomGraphNode>();
 
     private void OnNodeCreated(CustomGraphNode node, GraphNodeLogic nodeLogic)
     {
+        var mousePos = GetViewport().GetMousePosition();
+        node.PositionOffset = mousePos;
         _nodes.Add(nodeLogic.StringKey, node);
     }
 
@@ -127,7 +135,7 @@ public partial class GraphEditor : GraphEdit
     private void _OnConnectionRequest(StringName fromNodeName, long fromPortIndex, StringName toNodeName,
         long toPortIndex)
     {
-        if (!TryGetFromToPorts(fromNodeName, fromPortIndex, toNodeName, toPortIndex, out var fromSlot, out var toSlot)) 
+        if (!TryGetFromToPorts(fromNodeName, fromPortIndex, toNodeName, toPortIndex, out var fromSlot, out var toSlot))
             return;
 
         if (toSlot.TryConnectTo(fromSlot))
@@ -135,11 +143,11 @@ public partial class GraphEditor : GraphEdit
             ConnectNode(fromNodeName, (int)fromPortIndex, toNodeName, (int)toPortIndex);
         }
     }
-    
+
     private readonly record struct ConnectionRequestData();
 
-    private bool TryGetFromToPorts(StringName fromNodeName, long fromPortIndex, StringName toNodeName, long toPortIndex, 
-        [NotNullWhen(true)] out IOutputSlot? fromSlot, 
+    private bool TryGetFromToPorts(StringName fromNodeName, long fromPortIndex, StringName toNodeName, long toPortIndex,
+        [NotNullWhen(true)] out IOutputSlot? fromSlot,
         [NotNullWhen(true)] out IInputSlot? toSlot)
     {
         var fromNodeNameStr = fromNodeName.ToString();
@@ -206,4 +214,5 @@ public partial class GraphEditor : GraphEdit
     //}
 
     private readonly Dictionary<string, CustomGraphNode> _nodes = new();
+    private static readonly DynamicConstructorCache<GraphNodeLogic> NodeConstructorCache = new();
 }

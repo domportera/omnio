@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://c7tqhhapin30n"]
+[gd_scene load_steps=4 format=3 uid="uid://c7tqhhapin30n"]
 
 [ext_resource type="Script" path="res://GraphEditor.cs" id="1_npapd"]
 [ext_resource type="PackedScene" uid="uid://de8kvd0hcbex1" path="res://Scenes/GraphNodeScene.tscn" id="2_oonug"]
+[ext_resource type="PackedScene" uid="uid://bwgr6ga5nrofk" path="res://Scenes/type_in_search.tscn" id="3_cspyt"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -11,7 +12,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="GraphEdit" type="GraphEdit" parent="."]
+[node name="GraphEdit" type="GraphEdit" parent="." node_paths=PackedStringArray("_typeInSearch")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -22,3 +23,11 @@ scale = Vector2(1.03621, 1.01661)
 right_disconnects = true
 script = ExtResource("1_npapd")
 _template = ExtResource("2_oonug")
+_typeInSearch = NodePath("../TypeInSearch")
+
+[node name="TypeInSearch" parent="." instance=ExtResource("3_cspyt")]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 383.0
+offset_bottom = 31.0
