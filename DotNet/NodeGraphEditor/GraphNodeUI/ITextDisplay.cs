@@ -1,7 +1,7 @@
 ﻿using System;
 using Godot;
 
-namespace NodeGraphEditor.Editor;
+namespace NodeGraphEditor.GraphNodeUI;
 
 // an interface that represents a Control with modifiable text
 // so that we can handle different types of controls that have text in a uniform way

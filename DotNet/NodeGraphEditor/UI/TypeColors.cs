@@ -7,7 +7,7 @@ using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
 using Vector4 = System.Numerics.Vector4;
 
-namespace NodeGraphEditor.Engine;
+namespace NodeGraphEditor.UI;
 
 internal static class TypeColors
 {

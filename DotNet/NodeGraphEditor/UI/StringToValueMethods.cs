@@ -2,7 +2,7 @@
 using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 
-namespace NodeGraphEditor.Editor;
+namespace NodeGraphEditor.UI;
 
 internal static class FromStringMethods
 {

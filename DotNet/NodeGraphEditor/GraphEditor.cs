@@ -3,16 +3,21 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Godot;
-using NodeGraphEditor.NodeImplementations;
 using OperatorCore;
+using Utilities;
 
-namespace NodeGraphEditor.Editor;
+namespace NodeGraphEditor;
 
 public partial class GraphEditor : GraphEdit
 {
     [Export] private PackedScene? _template;
-    [Export] private TypeInSearch _typeInSearch;
+    [Export] private UI.TypeInSearch? _typeInSearch;
 
+    static GraphEditor()
+    {
+        NodeImplementations.TypeRegistration.FindAndRegisterTypes();
+    }
+    
     public override void _Ready()
     {
         base._Ready();
@@ -38,21 +43,23 @@ public partial class GraphEditor : GraphEdit
         //PopupRequest += _OnPopupRequest;
         //ScrollOffsetChanged += _OnScrollOffsetChanged;
 
-        _typeInSearch.SetItems(() => TypeCache.GraphNodeLogicTypes.Values
+        _typeInSearch!.SetItems(() => GraphNodeTypes.GraphNodeLogicTypes.Values
             .Select(x => x.FullName)
             .Where(x => x != null)!);
+        
+        _typeInSearch.Visible = false;
 
         _typeInSearch.ItemSelected += OnTypeSelected;
     }
 
     private void OnTypeSelected(object? _, string selectedTypeName)
     {
-        var type = TypeCache.GraphNodeLogicTypes[selectedTypeName];
+        var type = GraphNodeTypes.GraphNodeLogicTypes[selectedTypeName];
         CreateNodeOfType(type);
-        CloseTypeInSearch(_typeInSearch);
+        CloseTypeInSearch(_typeInSearch!);
     }
 
-    private static void CloseTypeInSearch(TypeInSearch typeInSearch)
+    private static void CloseTypeInSearch(UI.TypeInSearch typeInSearch)
     {
         typeInSearch.Visible = false;
         typeInSearch.ReleaseFocus();
@@ -102,13 +109,16 @@ public partial class GraphEditor : GraphEdit
     public override void _Input(InputEvent @event)
     {
         base._Input(@event);
+        
+        // hotkeys
         if (@event is InputEventKey { Pressed: true } key)
         {
             switch (key.Keycode)
             {
                 case Key.Tab:
-                    if (!_typeInSearch.Visible)
+                    if (!_typeInSearch!.Visible)
                     {
+                        _typeInSearch.GlobalPosition = GetGlobalMousePosition();
                         _typeInSearch.Visible = true;
                         _typeInSearch.GrabFocus();
                     }

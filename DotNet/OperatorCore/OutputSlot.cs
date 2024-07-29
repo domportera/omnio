@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel;
-using NodeGraphEditor.Editor;
-using NodeGraphEditor.Engine;
 
 // ReSharper disable ForCanBeConvertedToForeach
 
-namespace NodeGraphEditor.GraphNodes;
+namespace OperatorCore;
 
 [ReadOnly(true)]
 public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>

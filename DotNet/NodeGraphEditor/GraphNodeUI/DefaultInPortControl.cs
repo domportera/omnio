@@ -1,8 +1,9 @@
 ﻿using System;
 using Godot;
-using NodeGraphEditor.Engine;
+using NodeGraphEditor.UI;
+using OperatorCore;
 
-namespace NodeGraphEditor.Editor;
+namespace NodeGraphEditor.GraphNodeUI;
 
 internal sealed class DefaultInPortControl<T> : PortControl
 {
@@ -57,6 +58,7 @@ internal sealed class DefaultInPortControl<T> : PortControl
         var slot = GetSlot<InputSlot<T>>();
         slot.ValueChanged += _valueChanged;
         slot.ConnectionStateChanged += _connectionStateChanged;
+        _textDisplay!.SetTextSilently(_valueToString(slot.Value));
     }
 
     protected override void OnDispose()

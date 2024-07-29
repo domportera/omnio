@@ -1,7 +1,4 @@
-﻿using NodeGraphEditor.Engine;
-using NodeGraphEditor.GraphNodes;
-
-namespace NodeGraphEditor.Editor;
+﻿namespace OperatorCore;
 
 internal interface IInputSlot<in T>
 {

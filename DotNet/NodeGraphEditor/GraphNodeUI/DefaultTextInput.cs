@@ -1,4 +1,4 @@
-﻿namespace NodeGraphEditor.Editor;
+﻿namespace NodeGraphEditor.GraphNodeUI;
 
 public class DefaultTextInput<T>
 {

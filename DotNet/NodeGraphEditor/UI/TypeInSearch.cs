@@ -1,7 +1,9 @@
-using Godot;
 using System;
 using System.Collections.Generic;
-using OperatorCore;
+using Godot;
+using Utilities;
+
+namespace NodeGraphEditor.UI;
 
 public partial class TypeInSearch : LineEdit
 {

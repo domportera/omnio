@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 
 // taken from T3's T3.Core.Utils
-namespace OperatorCore;
+namespace Utilities;
 
 public static class StringUtils
 {

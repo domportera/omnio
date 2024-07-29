@@ -1,7 +1,7 @@
 ﻿using Godot;
 using Label = Godot.Label;
 
-namespace NodeGraphEditor.Editor;
+namespace OperatorCore;
 
 public abstract class PortControl
 {

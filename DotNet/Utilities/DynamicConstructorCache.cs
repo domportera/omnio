@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace OperatorCore;
+namespace Utilities;
 
 /// <summary>
 /// A cache for default constructors of types descended from T.
@@ -19,7 +19,7 @@ public class DynamicConstructorCache<T>
             throw new InvalidOperationException($"Type {descendantType} is not descended from {typeof(T)}");
 
         // compile this as a constructor expression
-        var expression = Expression.Lambda<Func<T>>(Expression.New(typeof(T))).Compile();
+        var expression = Expression.Lambda<Func<T>>(Expression.New(descendantType)).Compile();
         lock (_constructors)
         {
             _constructors[descendantType] = expression;

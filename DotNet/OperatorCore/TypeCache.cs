@@ -38,12 +38,7 @@ internal static class TypeCache
         {
             return genericTypeInfo;
         }
-
-        if (type.IsAssignableTo(typeof(GraphNodeLogic)))
-        {
-            RegisterNodeType(type);
-        }
-
+        
         var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         var index = Types.Count;
         var typeInfo = new TypeInfo(type, index, fields);
@@ -59,15 +54,21 @@ internal static class TypeCache
         return typeInfo;
     }
 
-    private static void RegisterNodeType(Type type)
-    {
-        NodeLogicTypes.Add(type.FullName!, type);
-    }
-    
-    public static IReadOnlyDictionary<string, Type> GraphNodeLogicTypes => NodeLogicTypes;
-    private static readonly Dictionary<string, Type> NodeLogicTypes = new(128);
-
     // because godot passes connection types as ints, we need to handle this in an odd way
     private static readonly Dictionary<Type, TypeInfo> TypeInfoCache = new(512);
     private static readonly List<Type> Types = new(512);
+}
+
+public static class GraphNodeTypes
+{
+    public static void RegisterNodeType(Type type)
+    {
+        if(!type.IsAssignableTo(typeof(GraphNodeLogic)))
+            throw new InvalidOperationException($"Type {type.Name} must be descended from {nameof(GraphNodeLogic)}");
+
+        NodeLogicTypes.Add(type.FullName!, type);
+    }
+
+    public static IReadOnlyDictionary<string, Type> GraphNodeLogicTypes => NodeLogicTypes;
+    private static readonly Dictionary<string, Type> NodeLogicTypes = new(128);
 }

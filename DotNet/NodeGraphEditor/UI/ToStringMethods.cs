@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Godot;
 
-namespace NodeGraphEditor.Editor;
+namespace NodeGraphEditor.UI;
 
 internal static class ToStringMethods
 {

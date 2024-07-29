@@ -1,6 +1,5 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using NodeGraphEditor.Editor;
 
 [assembly: InternalsVisibleTo("NodeGraphEditor")]
 
@@ -11,8 +10,6 @@ public abstract class GraphNodeLogic
     internal event Action? Destroyed;
 
     // this is a unique identifier for the instance of the node
-    // it is an init property so it does not need to be set in the constructor,
-    // which would be both annoying for child-classes and liable to modification by the child classes
     private Guid _instanceId = Guid.Empty;
     internal unsafe Guid InstanceId
     {

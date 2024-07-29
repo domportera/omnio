@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Godot;
-using NodeGraphEditor.GraphNodes;
 using OperatorCore;
 using Expression = System.Linq.Expressions.Expression;
 
-namespace NodeGraphEditor.Editor;
+namespace NodeGraphEditor.GraphNodeUI;
 internal static class PortUiGenerator
 {
     internal static void InitSlots(SlotInfoIO[] slots, CustomGraphNode parent, GraphNodeLogic logic, List<PortControl> portControls)

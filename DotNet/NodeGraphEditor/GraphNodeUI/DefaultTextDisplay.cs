@@ -1,8 +1,6 @@
-﻿using System;
-using Godot;
-using NodeGraphEditor.GraphNodes;
+﻿using Godot;
 
-namespace NodeGraphEditor.Editor;
+namespace NodeGraphEditor.GraphNodeUI;
 
 internal static class DefaultTextDisplay
 {

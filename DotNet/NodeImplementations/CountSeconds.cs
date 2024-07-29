@@ -1,15 +1,13 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
-using NodeGraphEditor.Engine;
-using NodeGraphEditor.GraphNodes;
 using OperatorCore;
 
-namespace NodeGraphEditor.NodeImplementations;
+namespace NodeImplementations;
 
 [Guid("61F89227-6810-49AB-9848-069DADB63B16")]
 public class CountSeconds : GraphNodeLogic
 {
-    private readonly InputSlot<int> _countInterval = new(1, 42);
+    private readonly InputSlot<double> _countRate = new(1, 1);
     
     private readonly OutputSlot<string> _countAsString = new(0, "0");
     private readonly OutputSlot<int> _count = new(1, 0);
@@ -20,8 +18,8 @@ public class CountSeconds : GraphNodeLogic
 
     public override void Process(double delta)
     {
-        _timer += delta;
-        _count.Value = (int)(_timer * _countInterval.Value);
+        _timer += delta * _countRate.Value;
+        _count.Value = (int)_timer;
         
         _stringBuilder.Append(_count.Value);
         _stringBuilder.Append('s');

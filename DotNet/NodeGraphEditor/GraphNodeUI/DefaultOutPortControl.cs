@@ -1,8 +1,9 @@
 ﻿using System;
 using Godot;
-using NodeGraphEditor.GraphNodes;
+using NodeGraphEditor.UI;
+using OperatorCore;
 
-namespace NodeGraphEditor.Editor;
+namespace NodeGraphEditor.GraphNodeUI;
 
 // todo - split into two classes
 internal sealed class DefaultOutPortControl<T> : PortControl

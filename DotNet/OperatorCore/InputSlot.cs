@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
-using NodeGraphEditor.Editor;
 
-namespace NodeGraphEditor.Engine;
+namespace OperatorCore;
 
 [ReadOnly(true)]
 public sealed class InputSlot<T>(ushort id, T value) : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>

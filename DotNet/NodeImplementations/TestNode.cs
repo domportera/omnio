@@ -1,10 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using Godot;
-using NodeGraphEditor.Engine;
-using NodeGraphEditor.GraphNodes;
 using OperatorCore;
 
-namespace NodeGraphEditor.NodeImplementations;
+namespace NodeImplementations;
 
 [Guid("9557ADE7-BEF8-4666-8ACB-C2C9276C69CC")]
 public class TestNode : GraphNodeLogic

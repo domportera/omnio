@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using NodeGraphEditor.Editor;
-using NodeGraphEditor.Engine;
+using NodeGraphEditor.GraphNodeUI;
+using NodeGraphEditor.UI;
 using OperatorCore;
 
 namespace NodeGraphEditor;
