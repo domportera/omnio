@@ -1,16 +1,13 @@
 <Project Sdk="Godot.NET.Sdk/4.3.0-rc.1">
-    <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net8.0</TargetFramework>
-        <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'ios' ">net8.0</TargetFramework>
-        <EnableDynamicLoading>true</EnableDynamicLoading>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-
-    <!-- Csproj references -->
-    <ItemGroup>
-        <ProjectReference Include="..\NodeImplementations\NodeImplementations.csproj"/>
-        <ProjectReference Include="..\OperatorCore\OperatorCore.csproj"/>
-    </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net8.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'ios' ">net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NodeImplementations\NodeImplementations.csproj" />
+    <ProjectReference Include="..\OperatorCore\OperatorCore.csproj" />
+  </ItemGroup>
 </Project>

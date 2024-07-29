@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=3 uid="uid://bwgr6ga5nrofk"]
+
+[ext_resource type="Script" path="res://UI/TypeInSearch.cs" id="1_6y3up"]
+
+[node name="TypeInSearch" type="LineEdit"]
+offset_left = 38.0
+offset_top = 117.0
+offset_right = 421.0
+offset_bottom = 148.0
+virtual_keyboard_enabled = false
+select_all_on_focus = true
+
+[node name="ItemList" type="ItemList" parent="."]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 1.0
+offset_bottom = 101.0
+grow_horizontal = 2
+grow_vertical = 0
+item_count = 3
+item_0/text = "sdfsdfsdfsdfsdf"
+item_2/text = "gggdf"
+script = ExtResource("1_6y3up")
