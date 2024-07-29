@@ -80,7 +80,7 @@ internal static class PortUiGenerator
                 {
                     if (!InputConstructors.TryGetValue(slotType, out constructor!))
                     {
-                        constructor = GenerateConstructor(slotType, true);
+                        constructor = GenerateDefaultConstructor(slotType, true);
                         InputConstructors[slotType] = constructor;
                     }
 
@@ -90,7 +90,7 @@ internal static class PortUiGenerator
                 {
                     if(!OutputConstructors.TryGetValue(slotType, out constructor!))
                     {
-                        constructor = GenerateConstructor(slotType, false);
+                        constructor = GenerateDefaultConstructor(slotType, false);
                         OutputConstructors[slotType] = constructor;
                     }
 
@@ -109,7 +109,7 @@ internal static class PortUiGenerator
             return portControl;
         }
 
-        static Func<PortControl> GenerateConstructor(Type slotType, bool input)
+        static Func<PortControl> GenerateDefaultConstructor(Type slotType, bool input)
         {
             var genericType = input ? typeof(DefaultInPortControl<>) : typeof(DefaultOutPortControl<>);
             var constructedType = genericType.MakeGenericType(slotType.GetGenericArguments());
