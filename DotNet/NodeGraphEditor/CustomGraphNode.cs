@@ -17,15 +17,16 @@ public sealed partial class CustomGraphNode : GraphNode
             throw new System.InvalidOperationException("Node already has a logic definition");
         
         _logic = nodeLogic;
-        SetName(nodeLogic.StringKey);
+        SetName(nodeLogic.InstanceIdString);
         SetTitle(nodeLogic.GetType().Name);
-        var slotDefinitions = _logic!.GetSlotDefinitions();
+        var slotDefinitions = GetSlotDefinitions(_logic);
         SetSlots(slotDefinitions);
         _logic.SetReady();
     }
 
     public override void _Process(double delta)
     {
+        // todo - move off the main thread ?
         _logic!.Process(delta);
     }
 
@@ -40,12 +41,8 @@ public sealed partial class CustomGraphNode : GraphNode
         var portCount = 0;
         var transparentColor = Colors.Transparent; // cache for performance;
         
-        if(_inputSlots != null)
-            throw new System.InvalidOperationException("Slots already set");
         
         var slotCount = slots.Length;
-        _inputSlots = new IInputSlot[slotCount];
-        _outputSlots = new IOutputSlot[slotCount];
         
         for (var i = 0; i < slotCount; i++)
         {
@@ -56,9 +53,6 @@ public sealed partial class CustomGraphNode : GraphNode
             {
                 portCount += *(byte*)&inputEnable + *(byte*)&outputEnable;
             }
-            
-            _inputSlots[i] = inputSlot as IInputSlot;
-            _outputSlots[i] = outputSlot as IOutputSlot;
 
             SetSlot(slotIndex: i,
                 enableLeftPort: inputEnable,
@@ -71,7 +65,35 @@ public sealed partial class CustomGraphNode : GraphNode
         }
 
         _portControls = new List<PortControl>(portCount);
-        PortUiGenerator.InitSlots(slots, this, _logic!, _portControls);
+        PortUiGenerator.InitSlots(slots, this, _portControls);
+    }
+
+    internal static SlotInfoIO[] GetSlotDefinitions(GraphNodeLogic logic)
+    {
+        var inputSlots = logic.InputSlots;
+        var outputSlots = logic.OutputSlots;
+        var inputCount = inputSlots.Count;
+        var outputCount = outputSlots.Count;
+        var maxCount = Math.Max(inputCount, outputCount);
+        var slots = new SlotInfoIO[maxCount];
+
+        for (int i = 0; i < maxCount; i++)
+        {
+            var inputDef = GetSlotInfo(i, inputSlots);
+            var outputDef = GetSlotInfo(i, outputSlots);
+            slots[i] = new SlotInfoIO(inputDef, outputDef);
+        }
+
+        return slots;
+
+        static SlotInfo GetSlotInfo<T>(int i, IReadOnlyList<T> slots) where T : ISlot
+        {
+            if (i >= slots.Count)
+                return default;
+
+            var slot = slots[i];
+            return new SlotInfo(true, TypeCache.GetTypeInfo(slot.Type), slot);
+        }
     }
 
     public override void _ExitTree()
@@ -81,43 +103,10 @@ public sealed partial class CustomGraphNode : GraphNode
     }
 
     private List<PortControl>? _portControls;
-    private IInputSlot?[]? _inputSlots;
-    private IOutputSlot?[]? _outputSlots;
 
-    internal IInputSlot GetInputPort(int fromPort)
-    {
-        return GetAtIndex(fromPort, _inputSlots!)!;
-    }
-    
-    internal IOutputSlot GetOutputPort(int fromPort)
-    {
-        return GetAtIndex(fromPort, _outputSlots!)!;
-    }
-    private static T GetAtIndex<T>(int fromPort, T[] collection)
-    {
-        if(fromPort < 0 || fromPort >= collection!.Length)
-            throw new System.ArgumentOutOfRangeException(nameof(fromPort));
-        
-        var port = collection[fromPort]!;
 
-        if(port == null)
-            throw new System.InvalidOperationException($"Port {fromPort} is null");
-        
-        return port;
-    }
-
-    public void ReleaseGraphNode()
+    public void ReleaseUi()
     {
-        _logic!.Destroy();
-        foreach (var port in _inputSlots!)
-        {
-            port?.DisconnectAll();
-        }
-        
-        foreach (var port in _outputSlots!)
-        {
-            port?.DisconnectAll();
-        }
         
         foreach(var portControl in _portControls!)
         {
@@ -125,3 +114,6 @@ public sealed partial class CustomGraphNode : GraphNode
         }
     }
 }
+internal readonly record struct SlotInfoIO(SlotInfo Input, SlotInfo Output);
+
+internal readonly record struct SlotInfo(bool Enable, TypeInfo TypeInfo, ISlot? Slot);

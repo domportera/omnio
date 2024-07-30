@@ -7,7 +7,7 @@ using Expression = System.Linq.Expressions.Expression;
 namespace NodeGraphEditor.GraphNodeUI;
 internal static class PortUiGenerator
 {
-    internal static void InitSlots(SlotInfoIO[] slots, CustomGraphNode parent, GraphNodeLogic logic, List<PortControl> portControls)
+    internal static void InitSlots(SlotInfoIO[] slots, CustomGraphNode parent, List<PortControl> portControls)
     {
         // todo - it'd be nice to have a way to have a graph view in the middle of the input and output slots
         // this may not be possible with godot's current GraphNode system due to how the ports are drawn in pairs >_>

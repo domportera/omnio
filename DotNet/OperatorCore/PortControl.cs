@@ -14,7 +14,7 @@ public abstract class PortControl
     {
         // format name, for example "_mySlotName" -> "MySlotName"
         // todo - format name better
-        var slotName = _slot.Name.TrimStart('_');
+        var slotName = _slot!.Name.TrimStart('_');
         slotName = char.ToUpper(slotName[0]) + slotName[1..];
 
         var isInput = _slot is IInputSlot;
@@ -61,7 +61,7 @@ public abstract class PortControl
 
     protected abstract Control CreateControl();
 
-    private ISlot _slot;
+    private ISlot? _slot;
     private bool _isDisposed;
 
     private const string NameFmt = "{0} ({1})";

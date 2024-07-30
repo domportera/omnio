@@ -362,4 +362,18 @@ public static class StringUtils
     }
     
     public static string ToForwardSlashes(this string str) => str.Replace('\\', '/');
+
+    public static unsafe void ReplaceChar(string str, char toReplace, char replaceWith)
+    {
+        // replace any '/' with '_'
+        var length = str.Length;
+        fixed (char* pKey = str)
+        {
+            for (var i = 0; i < length; i++)
+            {
+                if (pKey[i] == toReplace)
+                    pKey[i] = replaceWith;
+            }
+        }
+    }
 }

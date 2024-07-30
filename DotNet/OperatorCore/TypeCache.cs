@@ -55,8 +55,24 @@ internal static class TypeCache
     }
 
     // because godot passes connection types as ints, we need to handle this in an odd way
-    private static readonly Dictionary<Type, TypeInfo> TypeInfoCache = new(512);
+    private static readonly Dictionary<Type, TypeInfo> TypeInfoCache = new(256);
     private static readonly List<Type> Types = new(512);
+    private static readonly Dictionary<Guid, Type> TypesByGuid = new(256);
+    
+    public static Type GetTypeById(Guid typeId)
+    {
+        if (!TypesByGuid.TryGetValue(typeId, out var type))
+        {
+            throw new InvalidOperationException($"Type with id {typeId} is not registered");
+        }
+
+        return type;
+    }
+
+    public static void RegisterType(Type type, Guid typeId)
+    {
+        TypesByGuid.Add(typeId, type);
+    }
 }
 
 public static class GraphNodeTypes
@@ -66,9 +82,11 @@ public static class GraphNodeTypes
         if(!type.IsAssignableTo(typeof(GraphNodeLogic)))
             throw new InvalidOperationException($"Type {type.Name} must be descended from {nameof(GraphNodeLogic)}");
 
-        NodeLogicTypes.Add(type.FullName!, type);
+        var typeId = TypeCache.GetTypeGuid(type);
+        NodeLogicTypesByName.Add(type.FullName!, typeId);
+        TypeCache.RegisterType(type, typeId);
     }
 
-    public static IReadOnlyDictionary<string, Type> GraphNodeLogicTypes => NodeLogicTypes;
-    private static readonly Dictionary<string, Type> NodeLogicTypes = new(128);
+    public static IReadOnlyDictionary<string, Guid> GraphNodeLogicTypesByName => NodeLogicTypesByName;
+    private static readonly Dictionary<string, Guid> NodeLogicTypesByName = new(128);
 }

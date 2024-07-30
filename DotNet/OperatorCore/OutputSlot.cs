@@ -7,7 +7,14 @@ namespace OperatorCore;
 [ReadOnly(true)]
 public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
 {
-    internal readonly ushort Id;
+    public OutputSlot(ushort id, T value)
+    {
+        Id = id;
+        _value = value;
+    }
+    
+    internal ushort Id { get; private set; }
+    ushort ISlot.Id { get => Id; set => Id = value; }
     private T _value;
 
     public T Value
@@ -91,17 +98,20 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
     }
 
     private readonly List<IInputSlot<T>> _connectedInputSlots = [];
-
-    public OutputSlot(ushort id, T value)
+    
+    // for use with reflection only - needs a default constructor
+    // ReSharper disable once UnusedMember.Local
+    private OutputSlot()
     {
-        Id = id;
-        _value = value;
     }
 
     void ISlot.DisconnectAll()
     {
         while (_connectedInputSlots.Count > 0)
-            _connectedInputSlots[^1].Reference.ReleaseConnection();
+        {
+            // this will end up calling RemoveConnection for each, which will remove the slot from the list
+            _connectedInputSlots[^1].Reference.ReleaseConnection(this);
+        }
     }
 
 }

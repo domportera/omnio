@@ -3,11 +3,19 @@
 namespace OperatorCore;
 
 [ReadOnly(true)]
-public sealed class InputSlot<T>(ushort id, T value) : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
+public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
 {
-    internal readonly ushort Id = id;
+    public InputSlot(ushort id, T value)
+    {
+        Id = id;
+        _value = value;
+        DefaultValue = value;
+    }
+    
+    internal ushort Id { get; private set; }
+    ushort ISlot.Id { get => Id; set => Id = value; }
 
-    private T _value = value;
+    private T _value;
 
     public T Value
     {
@@ -42,28 +50,38 @@ public sealed class InputSlot<T>(ushort id, T value) : IInputSlot<T>, IInputSlot
 
     Type ISlot.Type => typeof(T);
 
-    public readonly T? DefaultValue = value;
+    public readonly T? DefaultValue;
     public event Action? ValueChanged;
 
-    bool IInputSlot.TryConnectTo(IOutputSlot outputSlot)
+    bool IInputSlot.TryConnectTo(IOutputSlot outputSlot, bool isTransformation)
     {
         if (!outputSlot.TryConnectTo(this)) 
             return false;
-        
-        if (_connectedOutputSlot != null)
-            ReleaseConnection();
 
-        _connectedOutputSlot = outputSlot;
-        ConnectionStateChanged?.Invoke(true);
+        if (!isTransformation)
+        {
+            if (_connectedOutputSlot != null)
+                DisconnectAll();
+
+            _connectedOutputSlot = outputSlot;
+            ConnectionStateChanged?.Invoke(true);
+        }
+        else
+        {
+            if(_transformationSlot != null)
+                throw new InvalidOperationException("Transformation slot already set - multiple connections not yet supported");
+            
+            _transformationSlot = outputSlot;
+        }
+
         return true;
 
     }
 
-    void ISlot.DisconnectAll() => ((IInputSlot)this).ReleaseConnection();
+    void ISlot.DisconnectAll() => DisconnectAll();
 
-    void IInputSlot.ReleaseConnection() => ReleaseConnection();
 
-    private void ReleaseConnection()
+    private void DisconnectAll()
     {
         if (_connectedOutputSlot == null)
             return;
@@ -71,6 +89,21 @@ public sealed class InputSlot<T>(ushort id, T value) : IInputSlot<T>, IInputSlot
         _connectedOutputSlot.RemoveConnection(this);
         _connectedOutputSlot = null;
         ConnectionStateChanged?.Invoke(false);
+    }
+
+    void IInputSlot.ReleaseConnection(IOutputSlot slot)
+    {
+        if (slot == _transformationSlot)
+        {
+            _transformationSlot.RemoveConnection(this);
+            _transformationSlot = null;
+            return;
+        }
+        
+        if(_connectedOutputSlot != slot)
+            throw new InvalidOperationException("Cannot release connection to a slot that is not connected");
+        
+        DisconnectAll();
     }
 
     internal event Action<bool>? ConnectionStateChanged;
@@ -85,4 +118,12 @@ public sealed class InputSlot<T>(ushort id, T value) : IInputSlot<T>, IInputSlot
     public bool IsConnected => _connectedOutputSlot != null;
 
     private IOutputSlot? _connectedOutputSlot;
+
+    private IOutputSlot? _transformationSlot;
+    
+    // for use with reflection only - needs a default constructor
+    // ReSharper disable once UnusedMember.Local
+    private InputSlot()
+    {
+    }
 }

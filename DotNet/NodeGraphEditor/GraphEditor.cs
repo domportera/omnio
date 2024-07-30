@@ -19,7 +19,12 @@ public partial class GraphEditor : GraphEdit
     {
         NodeImplementations.TypeRegistration.FindAndRegisterTypes();
     }
-    
+
+    public void SetRootNode(CustomGraphNode node)
+    {
+        
+    }
+
     public override void _Ready()
     {
         base._Ready();
@@ -45,9 +50,7 @@ public partial class GraphEditor : GraphEdit
         //PopupRequest += _OnPopupRequest;
         //ScrollOffsetChanged += _OnScrollOffsetChanged;
 
-        _typeInSearch!.SetItems(() => GraphNodeTypes.GraphNodeLogicTypes.Values
-            .Select(x => x.FullName)
-            .Where(x => x != null)!);
+        _typeInSearch!.SetItems(() => GraphNodeTypes.GraphNodeLogicTypesByName.Keys);
         
         _typeInSearch.Visible = false;
 
@@ -56,8 +59,7 @@ public partial class GraphEditor : GraphEdit
 
     private void OnTypeSelected(object? _, string selectedTypeName)
     {
-        var type = GraphNodeTypes.GraphNodeLogicTypes[selectedTypeName];
-        CreateNodeOfType(type);
+        CreateNodeOfType(selectedTypeName);
         CloseTypeInSearch(_typeInSearch!);
     }
 
@@ -68,28 +70,21 @@ public partial class GraphEditor : GraphEdit
         typeInSearch.Text = "";
     }
 
-    private void CreateNodeOfType(Type type)
+    private void CreateNodeOfType(string typeName)
     {
-        var node = Instantiate();
-        var constructor = NodeConstructorCache.GetDefaultConstructor(type);
-        
-        GraphNodeLogic nodeLogic;
-        try
+        var typeId = GraphNodeTypes.GraphNodeLogicTypesByName[typeName];
+        if (!_rootCanvasNode.SubGraph.TryCreateNodeLogic(typeId, out var nodeLogic))
         {
-            nodeLogic = constructor();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Failed to create node of type {type.FullName}: {e}");
+            Console.WriteLine($"Failed to create node of type {typeName}");
             return;
         }
 
-        nodeLogic.InstanceId = Guid.NewGuid();
+        var node = InstantiateGraphNodeUi();
         node.ApplyNode(nodeLogic);
         AddChild(node);
 
-        node.PositionOffset =  (_placementPosition + ScrollOffset) / Zoom;
-        _nodes.Add(nodeLogic.StringKey, node);
+        node.PositionOffset = (_placementPosition + ScrollOffset) / Zoom;
+        _subGraphUi.NodeUIs.Add(nodeLogic.InstanceId, node);
     }
 
     private void _OnDeleteNodesRequest(Godot.Collections.Array nodes)
@@ -99,13 +94,17 @@ public partial class GraphEditor : GraphEdit
         {
             if (node.Obj is not StringName name) continue;
 
-            if (!_nodes.Remove(name.ToString(), out var customNode))
+            var nameStr = name.ToString();
+            var guid = Guid.Parse(nameStr);
+
+            if(!_rootCanvasNode.SubGraph.TryRemoveNode(guid))
             {
-                Console.WriteLine($"Node '{name}' not found");
+                Console.WriteLine($"Node '{nameStr}' not found");
                 continue;
             }
 
-            customNode.ReleaseGraphNode();
+            var customNode = _subGraphUi.NodeUIs[guid];
+            customNode.ReleaseUi();
             customNode.QueueFree();
         }
     }
@@ -145,57 +144,32 @@ public partial class GraphEditor : GraphEdit
         }
     }
 
-    private CustomGraphNode Instantiate() => _template!.Instantiate<CustomGraphNode>();
+    private CustomGraphNode InstantiateGraphNodeUi() => _template!.Instantiate<CustomGraphNode>();
 
     // todo: allow dynamic type checking
     private void _OnConnectionRequest(StringName fromNodeName, long fromPortIndex, StringName toNodeName,
         long toPortIndex)
     {
-        if (!TryGetFromToPorts(fromNodeName, fromPortIndex, toNodeName, toPortIndex, out var fromSlot, out var toSlot))
-            return;
-
-        if (toSlot.TryConnectTo(fromSlot))
+        var fromPort = CreatePortInfo(fromNodeName, fromPortIndex);
+        var toPort = CreatePortInfo(toNodeName, toPortIndex);
+        if (_rootCanvasNode.TryAddConnection(fromPort, toPort))
         {
             ConnectNode(fromNodeName, (int)fromPortIndex, toNodeName, (int)toPortIndex);
         }
-    }
+    }    
 
-    private bool TryGetFromToPorts(StringName fromNodeName, long fromPortIndex, StringName toNodeName, long toPortIndex,
-        [NotNullWhen(true)] out IOutputSlot? fromSlot,
-        [NotNullWhen(true)] out IInputSlot? toSlot)
+    private void _OnDisconnectionRequest(StringName fromNodeName, long fromPortIndex, StringName toNodeName, long toPortIndex)
     {
-        var fromNodeNameStr = fromNodeName.ToString();
-        if (!_nodes.TryGetValue(fromNodeNameStr, out var fromNode))
+        var fromPort = CreatePortInfo(fromNodeName, fromPortIndex);
+        var toPort = CreatePortInfo(toNodeName, toPortIndex);
+        if (_rootCanvasNode.RemoveConnection(fromPort, toPort))
         {
-            Console.WriteLine($"Node '{fromNodeNameStr}' not found");
-            fromSlot = null;
-            toSlot = null;
-            return false;
+            DisconnectNode(fromNodeName, (int)fromPortIndex, toNodeName, (int)toPortIndex);
         }
-
-        var toNodeNameStr = toNodeName.ToString();
-        if (!_nodes.TryGetValue(toNodeNameStr, out var toNode))
-        {
-            Console.WriteLine($"Node '{toNodeNameStr}' not found");
-            fromSlot = null;
-            toSlot = null;
-            return false;
-        }
-
-        fromSlot = fromNode.GetOutputPort((int)fromPortIndex);
-        toSlot = toNode.GetInputPort((int)toPortIndex);
-        return true;
     }
-
-
-    private void _OnDisconnectionRequest(StringName fromNodeName, long fromPortId, StringName toNodeName, long toPortId)
-    {
-        if (!TryGetFromToPorts(fromNodeName, fromPortId, toNodeName, toPortId, out _, out var toSlot))
-            return;
-
-        toSlot.ReleaseConnection();
-        DisconnectNode(fromNodeName, (int)fromPortId, toNodeName, (int)toPortId);
-    }
+    
+    private static RuntimePortInfo CreatePortInfo(StringName nodeName, long portIndex) =>
+        new(Guid.Parse(nodeName), (int)portIndex); 
 
     //public override void _Process(double delta)
     //{
@@ -227,6 +201,22 @@ public partial class GraphEditor : GraphEdit
     //    return base.HasGodotClassSignal(in signal);
     //}
 
-    private readonly Dictionary<string, CustomGraphNode> _nodes = new();
-    private static readonly DynamicConstructorCache<GraphNodeLogic> NodeConstructorCache = new();
+    private readonly GraphNodeLogic _rootCanvasNode = new RootCanvasNode();
+    private readonly SubGraphUi _subGraphUi = new();
+}
+
+[Serializable]
+internal class SubGraphUi
+{
+    [NonSerialized]
+    public readonly Dictionary<Guid, CustomGraphNode> NodeUIs = new();
+    
+    // instance Id is the key
+    public readonly Dictionary<Guid, GraphNodeUi> NodeUis = new();
+}
+
+[Serializable]
+internal struct GraphNodeUi
+{
+    
 }
