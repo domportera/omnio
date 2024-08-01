@@ -15,11 +15,6 @@ public partial class GraphEditor : GraphEdit
 
     private Vector2 _placementPosition;
 
-    static GraphEditor()
-    {
-        NodeImplementations.TypeRegistration.FindAndRegisterTypes();
-    }
-
     public void SetRootNode(CustomGraphNode node)
     {
         

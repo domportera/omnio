@@ -77,11 +77,31 @@ internal static class TypeCache
 
 public static class GraphNodeTypes
 {
+    public static void RegisterCurrentAssembly()
+    {
+        var assembly = Assembly.GetCallingAssembly();
+        foreach (var type in assembly.GetTypes())
+        {
+            if (type.IsAbstract || type.IsInterface)
+                continue;
+
+            if (type.IsAssignableTo(typeof(GraphNodeLogic)))
+            {
+                RegisterGraphNodeType(type);
+            }
+        }
+    }
+    
     public static void RegisterNodeType(Type type)
     {
         if(!type.IsAssignableTo(typeof(GraphNodeLogic)))
             throw new InvalidOperationException($"Type {type.Name} must be descended from {nameof(GraphNodeLogic)}");
 
+        RegisterGraphNodeType(type);
+    }
+
+    private static void RegisterGraphNodeType(Type type)
+    {
         var typeId = TypeCache.GetTypeGuid(type);
         NodeLogicTypesByName.Add(type.FullName!, typeId);
         TypeCache.RegisterType(type, typeId);
