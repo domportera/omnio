@@ -27,6 +27,11 @@ public static class LogLady
             logger.LogInformation(message);
         }
     }
+
+    public static void Error(Exception e)
+    {
+        Error(string.Empty, e);
+    }
     
     public static void Error(string message, Exception? exception = null)
     {
@@ -42,6 +47,11 @@ public static class LogLady
         {
             logger.LogWarning(message);
         }
+    }
+    
+    public static void Critical(Exception e)
+    {
+        Critical(string.Empty, e);
     }
     
     public static void Critical(string message, Exception? exception = null)

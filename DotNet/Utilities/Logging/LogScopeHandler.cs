@@ -2,7 +2,7 @@
 
 namespace Utilities.Logging;
 
-public class LogScopeHandler
+public sealed class LogScopeHandler
 {
     public LogScopeHandler()
     {
@@ -13,8 +13,7 @@ public class LogScopeHandler
     {
         if (!_scopePool.TryPop(out var scope))
         {
-            scope = new LogScope();
-            scope.Disposed += _onScopeDispose;
+            scope = new LogScope(_onScopeDispose);
         }
 
         _scopes.Push(scope);
@@ -38,13 +37,11 @@ public class LogScopeHandler
     private readonly ConcurrentStack<LogScope> _scopes = new();
     private readonly ConcurrentStack<LogScope> _scopePool = new();
 
-    private class LogScope : IDisposable
+    private class LogScope(Action<LogScope> onDisposed) : IDisposable
     {
-        public event Action<LogScope> Disposed = null!;
-        
         public void Dispose()
-        {
-            Disposed!(this);
+        { 
+            onDisposed(this);
         }
     }
 }
