@@ -1,5 +1,6 @@
 ﻿using System;
 using Godot;
+using Utilities.Logging;
 
 namespace NodeGraphEditor;
 
@@ -12,14 +13,16 @@ public partial class AutoLoad : Node
             throw new InvalidOperationException("AutoLoad already loaded");
         _instance = this;
         NodeImplementations.TypeRegistration.FindAndRegisterTypes();
-    }
-    public override void _Ready()
-    {
+        LogLady.AddLogger<GDLogger>();
+        LogLady.AddLogger<ConsoleLogger>();
     }
     
     ~AutoLoad()
     {
-        if(_instance == this)
-            _instance = null;
+        if (_instance != this)
+            return;
+        
+        _instance = null;
+        LogLady.RemoveAllLoggers();
     }
 }
