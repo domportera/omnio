@@ -9,7 +9,6 @@ internal interface IInputSlot<in T>
 internal interface IInputSlot : ISlot
 {
     public bool TryConnectTo(IOutputSlot outputSlot, bool isTransformation = false);
-    event Action<bool> ConnectionStateChanged;
 
     void ISlot.ActAsTransformationSlot(ISlot slot) => ActAsTransformationSlot((IOutputSlot)slot);
     void ActAsTransformationSlot(IOutputSlot slot)
@@ -42,8 +41,10 @@ public interface ISlot
     string Name { get; set; }
     void DisconnectAll();
     event Action ValueChanged;
+    event Action<bool> ConnectionStateChanged;
 
     void ActAsTransformationSlot(ISlot slot);
+    public object LockObject { get; }
 }
 
 internal interface IOutputSlot : ISlot

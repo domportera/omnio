@@ -74,6 +74,7 @@ public partial class GraphEditor : GraphEdit
 
         var node = InstantiateGraphNodeUi();
         node.ApplyNode(nodeLogic);
+        nodeLogic.SetReady();
         AddChild(node);
 
         node.PositionOffset = (_placementPosition + ScrollOffset) / Zoom;

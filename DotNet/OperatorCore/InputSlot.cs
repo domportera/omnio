@@ -12,25 +12,38 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
         _value = value;
         DefaultValue = value;
     }
-    
+
     internal ushort Id { get; private set; }
-    ushort ISlot.Id { get => Id; set => Id = value; }
 
-    private T _value;
+    ushort ISlot.Id
+    {
+        get => Id;
+        set => Id = value;
+    }
 
-    public T Value
+    private T? _value;
+
+    public T? Value
     {
         get => _value;
         internal set
         {
-            _value = value;
+            if (ValueChanged == null)
+            {
+                _value = value;
+                return;
+            }
+
             try
             {
-                ValueChanged?.Invoke();
+                lock (LockObject)
+                {
+                    _value = value;
+                    ValueChanged.Invoke();
+                }
             }
             catch (Exception e)
             {
-                // todo - more robust logging with owning node and slot name
                 LogLady.Error(e);
             }
         }
@@ -44,7 +57,7 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
         set => Name = value;
     }
 
-    T IInputSlot<T>.Value
+    T? IInputSlot<T>.Value
     {
         set => Value = value;
     }
@@ -53,10 +66,11 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
 
     public readonly T? DefaultValue;
     public event Action? ValueChanged;
+    public object LockObject { get; } = new();
 
     bool IInputSlot.TryConnectTo(IOutputSlot outputSlot, bool isTransformation)
     {
-        if (!outputSlot.TryConnectTo(this)) 
+        if (!outputSlot.TryConnectTo(this))
             return false;
 
         if (!isTransformation)
@@ -69,14 +83,14 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
         }
         else
         {
-            if(_transformationSlot != null)
-                throw new InvalidOperationException("Transformation slot already set - multiple connections not yet supported");
-            
+            if (_transformationSlot != null)
+                throw new InvalidOperationException(
+                    "Transformation slot already set - multiple connections not yet supported");
+
             _transformationSlot = outputSlot;
         }
 
         return true;
-
     }
 
     void ISlot.DisconnectAll() => DisconnectAll();
@@ -100,16 +114,16 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
             _transformationSlot = null;
             return;
         }
-        
-        if(_connectedOutputSlot != slot)
+
+        if (_connectedOutputSlot != slot)
             throw new InvalidOperationException("Cannot release connection to a slot that is not connected");
-        
+
         DisconnectAll();
     }
 
     internal event Action<bool>? ConnectionStateChanged;
 
-    event Action<bool> IInputSlot.ConnectionStateChanged
+    event Action<bool> ISlot.ConnectionStateChanged
     {
         add => ConnectionStateChanged += value;
         remove => ConnectionStateChanged -= value;
@@ -121,7 +135,7 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
     private IOutputSlot? _connectedOutputSlot;
 
     private IOutputSlot? _transformationSlot;
-    
+
     // for use with reflection only - needs a default constructor
     // ReSharper disable once UnusedMember.Local
     private InputSlot()

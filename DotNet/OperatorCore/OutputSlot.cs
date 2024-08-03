@@ -23,17 +23,30 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
         get => _value;
         set
         {
-            _value = value;
-            for (int i = 0; i < _connectedInputSlots.Count; i++)
-                _connectedInputSlots[i].Value = value;
-
+            if (ValueChanged == null)
+            {
+                SetValue(value);
+                return;
+            }
+            
             try
             {
-                ValueChanged?.Invoke();
+                lock (LockObject)
+                {
+                    SetValue(value);
+                    ValueChanged.Invoke();
+                }
             }
             catch (Exception e)
             {
                 LogLady.Error(e);
+            }
+
+            void SetValue(T? newValue)
+            {
+                _value = newValue;
+                for (int i = 0; i < _connectedInputSlots.Count; i++)
+                    _connectedInputSlots[i].Value = newValue;
             }
         }
     }
@@ -46,13 +59,25 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
     }
 
     Type ISlot.Type => typeof(T);
+    
+    internal event Action? ValueChanged;
     event Action? ISlot.ValueChanged
     {
         add => ValueChanged += value;
         remove => ValueChanged -= value;
     }
     
-    internal event Action? ValueChanged;
+    internal event Action<bool>? ConnectionStateChanged;
+    event Action<bool>? ISlot.ConnectionStateChanged
+    {
+        add => ConnectionStateChanged += value;
+        remove => ConnectionStateChanged -= value;
+    }
+    
+    
+
+    public object LockObject { get; } = new();
+
 
     bool IOutputSlot.RemoveConnection<TInput>(InputSlot<TInput> inputSlot)
     {

@@ -21,13 +21,6 @@ public sealed partial class CustomGraphNode : GraphNode
         SetTitle(nodeLogic.GetType().Name);
         var slotDefinitions = GetSlotDefinitions(_logic);
         SetSlots(slotDefinitions);
-        _logic.SetReady();
-    }
-
-    public override void _Process(double delta)
-    {
-        // todo - move off the main thread ?
-        _logic!.Process(delta);
     }
 
     //public override void _DrawPort(int slotIndex, Vector2I position, bool left, Color color)

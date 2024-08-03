@@ -26,7 +26,7 @@ public class TestNode : GraphNodeLogic
         };
     }
 
-    public override void Process(double delta)
+    public override void Process(double deltaTime)
     {
     }
 

@@ -5,7 +5,6 @@ using OperatorCore;
 
 namespace NodeGraphEditor.GraphNodeUI;
 
-// todo - split into two classes
 internal sealed class DefaultOutPortControl<T> : PortControl
 {
     protected override Control CreateControl()
@@ -15,18 +14,20 @@ internal sealed class DefaultOutPortControl<T> : PortControl
         var str = toStringMethod(slot.Value);
         var textDisplay = DefaultTextDisplay.CreateLineEdit(str, HorizontalAlignment.Right);
         textDisplay.Control.Editable = false;
-        _valueChanged = () => textDisplay.SetTextSilently(toStringMethod(slot.Value));
-        slot.ValueChanged += _valueChanged;
         _displayLabel = textDisplay;
         return textDisplay.Control;
     }
 
-    protected override void OnDispose()
-    {
-        GetSlot<OutputSlot<T>>().ValueChanged -= _valueChanged;
-        _displayLabel?.Dispose();
-    }
+    protected override void OnDispose() => _displayLabel?.Dispose();
 
-    private Action? _valueChanged;
+    protected override void OnValueChanged()
+    {
+        var slot = GetSlot<OutputSlot<T>>();
+        _displayLabel!.SetTextSilently(ValueToString(slot.Value));
+    }
+    
+    protected override void OnConnectionStateChanged(bool isConnected) { }
+
+    private static readonly ToStringMethod<T> ValueToString = ToStringMethods.Get<T>();
     private ITextDisplay? _displayLabel;
 }

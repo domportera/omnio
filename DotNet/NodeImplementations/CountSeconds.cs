@@ -16,9 +16,9 @@ public class CountSeconds : GraphNodeLogic
         
     }
 
-    public override void Process(double delta)
+    public override void Process(double deltaTime)
     {
-        _timer += delta * _countRate.Value;
+        _timer += deltaTime * _countRate.Value;
         _count.Value = (int)_timer;
         
         _stringBuilder.Append(_count.Value);

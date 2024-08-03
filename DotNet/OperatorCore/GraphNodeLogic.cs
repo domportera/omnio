@@ -11,7 +11,7 @@ internal sealed class RootCanvasNode : GraphNodeLogic
     {
     }
 
-    public override void Process(double delta)
+    public override void Process(double deltaTime)
     {
     }
 
@@ -62,10 +62,11 @@ public abstract partial class GraphNodeLogic
             throw new InvalidOperationException("Instance ID must be set before calling SetReady");
 
         OnInitialize();
+        ProcessLoop.Add(this);
     }
 
     protected abstract void OnInitialize();
-    public abstract void Process(double delta);
+    public abstract void Process(double deltaTime);
 
     protected abstract void OnDestroy();
 
@@ -75,6 +76,8 @@ public abstract partial class GraphNodeLogic
         {
             return;
         }
+        
+        ProcessLoop.Remove(this);
 
         _isDestroyed = true;
         Destroyed?.Invoke();

@@ -1,5 +1,6 @@
 ﻿using System;
 using Godot;
+using OperatorCore;
 using Utilities.Logging;
 
 namespace NodeGraphEditor;
@@ -16,6 +17,17 @@ public partial class AutoLoad : Node
         LogLady.AddLogger<GDLogger>();
         LogLady.AddLogger<ConsoleLogger>();
     }
+
+    public override void _Process(double dt)
+    {
+        if (_isPaused)
+            return;
+        
+        ProcessLoop.AllowRunOnce();
+        UiRunner.Do();
+    }
+    
+    private bool _isPaused;
     
     ~AutoLoad()
     {
@@ -24,5 +36,6 @@ public partial class AutoLoad : Node
         
         _instance = null;
         LogLady.RemoveAllLoggers();
+        ProcessLoop.Stop();
     }
 }

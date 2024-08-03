@@ -11,7 +11,7 @@ public class InterfaceTest : GraphNodeLogic
         string cat = "";
     }
 
-    public override void Process(double delta)
+    public override void Process(double deltaTime)
     {
     }
 
