@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Utilities.Logging;
 
 namespace OperatorCore;
 
@@ -30,7 +31,7 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
             catch (Exception e)
             {
                 // todo - more robust logging with owning node and slot name
-                Console.WriteLine(e);
+                LogLady.Error(e);
             }
         }
     }

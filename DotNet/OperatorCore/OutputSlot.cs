@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Utilities.Logging;
 
 // ReSharper disable ForCanBeConvertedToForeach
 
@@ -7,17 +8,17 @@ namespace OperatorCore;
 [ReadOnly(true)]
 public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
 {
-    public OutputSlot(ushort id, T value)
+    public OutputSlot(ushort id)
     {
         Id = id;
-        _value = value;
+        _value = default;
     }
     
     internal ushort Id { get; private set; }
     ushort ISlot.Id { get => Id; set => Id = value; }
-    private T _value;
+    private T? _value;
 
-    public T Value
+    public T? Value
     {
         get => _value;
         set
@@ -25,8 +26,15 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
             _value = value;
             for (int i = 0; i < _connectedInputSlots.Count; i++)
                 _connectedInputSlots[i].Value = value;
-            
-            ValueChanged?.Invoke();
+
+            try
+            {
+                ValueChanged?.Invoke();
+            }
+            catch (Exception e)
+            {
+                LogLady.Error(e);
+            }
         }
     }
     

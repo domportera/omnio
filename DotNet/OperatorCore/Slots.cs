@@ -2,7 +2,7 @@
 
 internal interface IInputSlot<in T>
 {
-    T Value { set; }
+    T? Value { set; }
     public IInputSlot Reference { get; }
 }
 
@@ -32,7 +32,7 @@ internal interface IInputSlot : ISlot
 
 internal interface IReadOnlySlot<out T> : ISlot
 {
-    T Value { get; }
+    T? Value { get; }
 }
 
 public interface ISlot

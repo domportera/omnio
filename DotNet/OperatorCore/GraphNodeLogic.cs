@@ -27,7 +27,7 @@ public abstract partial class GraphNodeLogic
     // this is a unique identifier for the instance of the node
     private Guid _instanceId = Guid.Empty;
 
-    internal unsafe Guid InstanceId
+    internal Guid InstanceId
     {
         get => _instanceId;
         set
@@ -48,6 +48,12 @@ public abstract partial class GraphNodeLogic
 
     protected internal GraphNodeLogic()
     {
+    }
+    
+    public void LoadInstanceInfo(InstanceInfo data)
+    {
+        // data includes:
+        // specific input values for this instance (if not connected)
     }
 
     internal void SetReady()
@@ -88,8 +94,21 @@ public abstract partial class GraphNodeLogic
     private readonly List<IInputSlot> _inputSlots = new();
     private readonly List<IOutputSlot> _outputSlots = new();
     private bool _isDestroyed;
-    internal readonly SubGraph SubGraph = new();
-    
+
+    private SubGraph? _subGraph;
+
+    internal SubGraph SubGraph
+    {
+        get => _subGraph ??= new SubGraph();
+        set
+        {
+            if(_subGraph != null)
+                throw new InvalidOperationException("SubGraph can only be set once");
+            
+            _subGraph = value;
+        }
+    }
+
     internal IReadOnlyList<IInputSlot> InputSlots => _inputSlots;
     internal IReadOnlyList<IOutputSlot> OutputSlots => _outputSlots;
 
@@ -117,6 +136,7 @@ public abstract partial class GraphNodeLogic
         var toPort = toNode.GetInputPort(toSlot.PortIndex);
         
         toPort.ReleaseConnection(fromPort);
+        SubGraph.RemoveConnection(fromNode, fromPort, toNode, toPort);
         return true;
     }
 

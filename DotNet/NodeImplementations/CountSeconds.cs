@@ -9,8 +9,8 @@ public class CountSeconds : GraphNodeLogic
 {
     private readonly InputSlot<double> _countRate = new(1, 1);
     
-    private readonly OutputSlot<string> _countAsString = new(0, "0");
-    private readonly OutputSlot<int> _count = new(1, 0);
+    private readonly OutputSlot<string> _countAsString = new(0);
+    private readonly OutputSlot<int> _count = new(1);
     protected override void OnInitialize()
     {
         

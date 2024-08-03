@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Godot;
 using OperatorCore;
-using Utilities;
+using Utilities.Logging;
 
 namespace NodeGraphEditor;
 
@@ -45,7 +43,7 @@ public partial class GraphEditor : GraphEdit
         //PopupRequest += _OnPopupRequest;
         //ScrollOffsetChanged += _OnScrollOffsetChanged;
 
-        _typeInSearch!.SetItems(() => GraphNodeTypes.GraphNodeLogicTypesByName.Keys);
+        _typeInSearch!.SetItems(() => GraphNodeTypes.LogicAttributesByName.Keys);
         
         _typeInSearch.Visible = false;
 
@@ -67,10 +65,10 @@ public partial class GraphEditor : GraphEdit
 
     private void CreateNodeOfType(string typeName)
     {
-        var typeId = GraphNodeTypes.GraphNodeLogicTypesByName[typeName];
-        if (!_rootCanvasNode.SubGraph.TryCreateNodeLogic(typeId, out var nodeLogic))
+        var typeAttributes = GraphNodeTypes.LogicAttributesByName[typeName];
+        if (!_rootCanvasNode.SubGraph.TryCreateNodeLogic(typeAttributes.Guid, out var nodeLogic))
         {
-            Console.WriteLine($"Failed to create node of type {typeName}");
+            LogLady.Error($"Failed to create node of type {typeName}");
             return;
         }
 
@@ -84,7 +82,7 @@ public partial class GraphEditor : GraphEdit
 
     private void _OnDeleteNodesRequest(Godot.Collections.Array nodes)
     {
-        Console.WriteLine($"Deleting {nodes.Count} nodes");
+        LogLady.Info($"Deleting {nodes.Count} nodes");
         foreach (var node in nodes)
         {
             if (node.Obj is not StringName name) continue;
@@ -92,9 +90,9 @@ public partial class GraphEditor : GraphEdit
             var nameStr = name.ToString();
             var guid = Guid.Parse(nameStr);
 
-            if(!_rootCanvasNode.SubGraph.TryRemoveNode(guid))
+            if(!_rootCanvasNode.SubGraph.RemoveNode(guid))
             {
-                Console.WriteLine($"Node '{nameStr}' not found");
+                LogLady.Error($"Node '{nameStr}' not found");
                 continue;
             }
 

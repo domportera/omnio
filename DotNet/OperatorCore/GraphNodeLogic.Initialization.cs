@@ -49,6 +49,10 @@ public abstract partial class GraphNodeLogic
             {
                 ValidateAndAdd(field, _outputSlots, _outputSlotGenericType, OutputSlotTypeMap);
             }
+            else if (fieldType.IsAssignableTo(typeof(IList<IInputSlot>)))
+            {
+                
+            }
         }
 
         void ValidateAndAdd<T>(FieldInfo field, List<T> slots, List<Type> genericTypes,
