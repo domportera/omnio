@@ -1,5 +1,4 @@
-﻿using System;
-using Godot;
+﻿using Godot;
 using NodeGraphEditor.UI;
 using OperatorCore;
 

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
-using Godot;
 using OperatorCore;
+using Utilities.Logging;
 
 namespace NodeImplementations;
 
@@ -32,6 +32,6 @@ public class TestNode : GraphNodeLogic
 
     protected override void OnDestroy()
     {
-        GD.Print("HELP!!!!!!!!!!! IM DYING!!!!!!!!!!!!!");
+        LogLady.Info("HELP!!!!!!!!!!! IM DYING!!!!!!!!!!!!!");
     }
 }

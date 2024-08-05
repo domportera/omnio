@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperatorCore", "..\Operator
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utilities", "..\Utilities\Utilities.csproj", "{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGeneration", "..\SourceGeneration\SourceGeneration.csproj", "{91AB42F7-B1DD-41C0-85BE-7C82EC33A62F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 	Debug|Any CPU = Debug|Any CPU
@@ -39,5 +41,11 @@ Global
 		{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}.ExportDebug|Any CPU.Build.0 = Debug|Any CPU
 		{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}.ExportRelease|Any CPU.ActiveCfg = Debug|Any CPU
 		{4FAA6AF0-DDD7-439C-9F48-6EEB073C5100}.ExportRelease|Any CPU.Build.0 = Debug|Any CPU
+		{91AB42F7-B1DD-41C0-85BE-7C82EC33A62F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91AB42F7-B1DD-41C0-85BE-7C82EC33A62F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91AB42F7-B1DD-41C0-85BE-7C82EC33A62F}.ExportDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91AB42F7-B1DD-41C0-85BE-7C82EC33A62F}.ExportDebug|Any CPU.Build.0 = Debug|Any CPU
+		{91AB42F7-B1DD-41C0-85BE-7C82EC33A62F}.ExportRelease|Any CPU.ActiveCfg = Debug|Any CPU
+		{91AB42F7-B1DD-41C0-85BE-7C82EC33A62F}.ExportRelease|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal

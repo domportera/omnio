@@ -12,4 +12,7 @@
     <ProjectReference Include="..\OperatorCore\OperatorCore.csproj" />
     <ProjectReference Include="..\Utilities\Utilities.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
+  </ItemGroup>
 </Project>

@@ -9,7 +9,7 @@ namespace OperatorCore;
 /// all inner connections
 /// every inner graphNode and their instance info
 /// </summary>
-[Serializable]
+[System.Serializable]
 public class SubGraph
 {
     // index should match that of _nodeInstances

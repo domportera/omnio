@@ -1,4 +1,4 @@
-﻿<Project Sdk="Godot.NET.Sdk/4.3.0-beta.3">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
@@ -6,10 +6,13 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <AssemblyName>OperatorCore</AssemblyName>
+        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Utilities\Utilities.csproj" />
+        <ProjectReference Include="..\Utilities\Utilities.csproj"/>
+        <ProjectReference Include="..\SourceGeneration\SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <PackageReference Include="System.Text.Json" Version="8.0.4" />
     </ItemGroup>
 
 </Project>
