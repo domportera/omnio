@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\IO\IO.csproj" />
     <ProjectReference Include="..\NodeImplementations\NodeImplementations.csproj" />
     <ProjectReference Include="..\OperatorCore\OperatorCore.csproj" />
     <ProjectReference Include="..\Utilities\Utilities.csproj" />

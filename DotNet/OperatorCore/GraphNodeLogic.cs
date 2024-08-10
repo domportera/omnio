@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("NodeGraphEditor")]
@@ -8,9 +10,7 @@ namespace OperatorCore;
 
 public abstract partial class GraphNodeLogic
 {
-    protected internal GraphNodeLogic()
-    {
-    }
+    private static readonly HashSet<Assembly> Assemblies = new();
     
     internal event Action? Destroyed;
 

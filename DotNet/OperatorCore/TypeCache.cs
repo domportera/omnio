@@ -101,15 +101,14 @@ public sealed class HiddenAttribute : Attribute
 {
 }
 
-public readonly record struct TypeAttributes(Guid Guid, bool hidden, string TypeDescription, string TypeCategory);
+public readonly record struct TypeAttributes(Guid Guid, bool Hidden, string TypeDescription, string TypeCategory);
 public readonly record struct TypeInfo(Type Type, int TypeIndex, FieldInfo[] Fields);
 
 public static class GraphNodeTypes
 {
     [RequiresUnreferencedCode("This method is used to register types at runtime")]
-    public static void RegisterCurrentAssembly()
+    public static void RegisterCurrentAssembly(Assembly assembly)
     {
-        var assembly = Assembly.GetCallingAssembly();
         foreach (var type in assembly.GetTypes())
         {
             if (type.IsAbstract || type.IsInterface)
@@ -127,7 +126,7 @@ public static class GraphNodeTypes
         var typeInfo = TypeCache.GetTypeAttributes(type);
         TypeCache.RegisterType(type, typeInfo.Guid);
         
-        if(!typeInfo.hidden)
+        if(!typeInfo.Hidden)
             NodeLogicAttributesByName.Add(type.FullName!, typeInfo);
     }
 

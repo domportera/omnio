@@ -14,6 +14,7 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
         _value = default;
     }
     
+    private static readonly bool IsReferenceType = typeof(T).IsByRef;
     internal ushort Id { get; private set; }
     ushort ISlot.Id { get => Id; set => Id = value; }
     private T? _value;
@@ -48,6 +49,22 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
                 for (int i = 0; i < _connectedInputSlots.Count; i++)
                     _connectedInputSlots[i].Value = newValue;
             }
+        }
+    }
+
+    // Useful when an update to a slot occurs without an actual value change,
+    // particularly when the value is a reference type.
+    public void UpdateAsReferenceType()
+    {
+        if(!IsReferenceType)
+            throw new InvalidOperationException("This method is only valid for reference types.");
+        
+        if (ValueChanged == null)
+            return;
+        
+        lock (LockObject)
+        {
+            ValueChanged?.Invoke();
         }
     }
     
