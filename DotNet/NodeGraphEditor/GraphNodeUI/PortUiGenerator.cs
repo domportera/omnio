@@ -7,7 +7,7 @@ using Expression = System.Linq.Expressions.Expression;
 namespace NodeGraphEditor.GraphNodeUI;
 internal static class PortUiGenerator
 {
-    internal static void InitSlots(SlotInfoIO[] slots, CustomGraphNode parent, List<PortControl> portControls)
+    internal static void InitSlots(SlotInfoIO[] slots, CustomGraphNode parent, GraphNodeLogic logic, List<PortControl> portControls)
     {
         // todo - it'd be nice to have a way to have a graph view in the middle of the input and output slots
         // this may not be possible with godot's current GraphNode system due to how the ports are drawn in pairs >_>
@@ -16,7 +16,7 @@ internal static class PortUiGenerator
         for (int i = 0; i < slots.Length; i++)
         {
             var slotPair = slots[i];
-            var ((inputEnabled, inputTypeInfo, inputSlot), (outputEnabled, outputTypeInfo, outputSlot)) = slotPair;
+            var ((inputEnabled, inputTypeInfo), (outputEnabled, outputTypeInfo)) = slotPair;
 
             if (!inputEnabled && !outputEnabled)
                 continue;
@@ -29,7 +29,8 @@ internal static class PortUiGenerator
 
             if (inputEnabled)
             {
-                var control = CreateControl(inputSlot!, inputTypeInfo, row, Control.LayoutPreset.LeftWide, Control.GrowDirection.Begin);
+                var inputSlot = logic.GetInputPort(i);
+                var control = CreateControl(inputSlot, inputTypeInfo, row, Control.LayoutPreset.LeftWide, Control.GrowDirection.Begin);
                 portControls.Add(control);
             }
             else
@@ -45,7 +46,8 @@ internal static class PortUiGenerator
 
             if (outputEnabled)
             {
-                var control = CreateControl(outputSlot!, outputTypeInfo, row, Control.LayoutPreset.RightWide, Control.GrowDirection.End);
+                var outputSlot = logic.GetOutputPort(i);
+                var control = CreateControl(outputSlot, outputTypeInfo, row, Control.LayoutPreset.RightWide, Control.GrowDirection.End);
                 portControls.Add(control);
             }
             else

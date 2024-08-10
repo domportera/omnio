@@ -7,36 +7,15 @@ namespace OperatorCore;
 
 public abstract partial class GraphNodeLogic
 {
-    internal void LoadSubGraph(SubGraph? graph, InstanceInfo? instanceInfo)
+    internal static GraphNodeLogic CreateNodeLogic(Guid typeId)
     {
-        if(_subGraph != null)
-            throw new InvalidOperationException("Subgraph already loaded");
-        
-        _subGraph = graph ?? new SubGraph();
-        
-        if(instanceInfo == null)
-            return;
+        var type = TypeCache.GetTypeById(typeId);
+        return CreateNodeLogicFromType(type);
 
-        ApplyInstanceInfo(instanceInfo);
+        static GraphNodeLogic CreateNodeLogicFromType(Type type) => LogicConstructorCache.GetDefaultConstructor(type)();
     }
-
-    private void ApplyInstanceInfo(InstanceInfo instanceInfo)
-    {
-        foreach(var kvp in instanceInfo.UnconnectedInputValues)
-        {
-            var potentialSlot = _inputSlots.Find(slot => slot.Id == kvp.Key);
-
-            if (potentialSlot == null)
-            {
-                LogLady.Error($"Failed to find slot with ID {kvp.Key}");
-                continue;
-            }
-
-            potentialSlot.ApplyInputValue(kvp.Value);
-        }
-    }
-
-    internal void SetReady()
+    
+    private void SetReady()
     {
         if (InstanceIdString == null)
             throw new InvalidOperationException("Instance ID must be set before calling SetReady");
@@ -174,6 +153,28 @@ public abstract partial class GraphNodeLogic
         }
     }
 
+
+    internal void ApplyRuntimeInfo(SubGraph subGraph, InstanceInfo instanceInfo)
+    {
+        SubGraph = subGraph;
+        InstanceId = instanceInfo.InstanceId;
+        foreach (var kvp in instanceInfo.UnconnectedInputValues)
+        {
+            var potentialSlot = _inputSlots.Find(slot => slot.Id == kvp.Key);
+
+            if (potentialSlot == null)
+            {
+                LogLady.Error($"Failed to find slot with ID {kvp.Key}");
+                continue;
+            }
+
+            potentialSlot.ApplyInputValue(kvp.Value);
+        }
+
+        Init();
+        SetReady();
+    }
+
     private readonly List<Type> _inputSlotGenericType = new();
     private readonly List<Type> _outputSlotGenericType = new();
     private static readonly Dictionary<Type, Type> InputSlotTypeMap = new();
@@ -181,6 +182,4 @@ public abstract partial class GraphNodeLogic
     private static readonly DynamicConstructorCache<IOutputSlot> OutputConstructorCache = new();
     private static readonly DynamicConstructorCache<IInputSlot> InputConstructorCache = new();
     private static readonly DynamicConstructorCache<GraphNodeLogic> LogicConstructorCache = new();
-
-    internal static GraphNodeLogic CreateNodeLogic(Type type) => LogicConstructorCache.GetDefaultConstructor(type)();
 }

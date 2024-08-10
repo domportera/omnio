@@ -13,9 +13,9 @@ public partial class GraphEditor : GraphEdit
 
     private Vector2 _placementPosition;
 
-    public void SetRootNode(CustomGraphNode node)
+    public void SetRootNode(GraphNodeLogic node)
     {
-        
+        _currentRoot = node;
     }
 
     public override void _Ready()
@@ -48,6 +48,8 @@ public partial class GraphEditor : GraphEdit
         _typeInSearch.Visible = false;
 
         _typeInSearch.ItemSelected += OnTypeSelected;
+        
+        SetRootNode(new RootCanvasNode());
     }
 
     private void OnTypeSelected(object? _, string selectedTypeName)
@@ -66,15 +68,14 @@ public partial class GraphEditor : GraphEdit
     private void CreateNodeOfType(string typeName)
     {
         var typeAttributes = GraphNodeTypes.LogicAttributesByName[typeName];
-        if (!_rootCanvasNode.SubGraph.TryCreateNodeLogic(typeAttributes.Guid, out var nodeLogic))
+        if (!_currentRoot.SubGraph.TryCreateNewNodeLogic(typeAttributes.Guid, out var nodeLogic))
         {
             LogLady.Error($"Failed to create node of type {typeName}");
             return;
         }
 
-        var node = InstantiateGraphNodeUi();
-        node.ApplyNode(nodeLogic);
-        nodeLogic.SetReady();
+        var node = _template!.Instantiate<CustomGraphNode>();
+        node.ApplyLogic(nodeLogic);
         AddChild(node);
 
         node.PositionOffset = (_placementPosition + ScrollOffset) / Zoom;
@@ -91,7 +92,7 @@ public partial class GraphEditor : GraphEdit
             var nameStr = name.ToString();
             var guid = Guid.Parse(nameStr);
 
-            if(!_rootCanvasNode.SubGraph.RemoveNode(guid))
+            if(!_currentRoot.SubGraph.RemoveNode(guid))
             {
                 LogLady.Error($"Node '{nameStr}' not found");
                 continue;
@@ -138,7 +139,6 @@ public partial class GraphEditor : GraphEdit
         }
     }
 
-    private CustomGraphNode InstantiateGraphNodeUi() => _template!.Instantiate<CustomGraphNode>();
 
     // todo: allow dynamic type checking
     private void _OnConnectionRequest(StringName fromNodeName, long fromPortIndex, StringName toNodeName,
@@ -146,7 +146,7 @@ public partial class GraphEditor : GraphEdit
     {
         var fromPort = CreatePortInfo(fromNodeName, fromPortIndex);
         var toPort = CreatePortInfo(toNodeName, toPortIndex);
-        if (_rootCanvasNode.TryAddConnection(fromPort, toPort))
+        if (_currentRoot.TryAddConnection(fromPort, toPort))
         {
             ConnectNode(fromNodeName, (int)fromPortIndex, toNodeName, (int)toPortIndex);
         }
@@ -156,7 +156,7 @@ public partial class GraphEditor : GraphEdit
     {
         var fromPort = CreatePortInfo(fromNodeName, fromPortIndex);
         var toPort = CreatePortInfo(toNodeName, toPortIndex);
-        if (_rootCanvasNode.RemoveConnection(fromPort, toPort))
+        if (_currentRoot.RemoveConnection(fromPort, toPort))
         {
             DisconnectNode(fromNodeName, (int)fromPortIndex, toNodeName, (int)toPortIndex);
         }
@@ -195,7 +195,7 @@ public partial class GraphEditor : GraphEdit
     //    return base.HasGodotClassSignal(in signal);
     //}
 
-    private readonly GraphNodeLogic _rootCanvasNode = new RootCanvasNode();
+    private GraphNodeLogic _currentRoot;
     private readonly SubGraphUi _subGraphUi = new();
 }
 

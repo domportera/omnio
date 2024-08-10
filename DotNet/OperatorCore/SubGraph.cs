@@ -9,26 +9,50 @@ namespace OperatorCore;
 /// all inner connections
 /// every inner graphNode and their instance info
 /// </summary>
-[System.Serializable]
-public class SubGraph
+public partial class SubGraph
 {
     // index should match that of _nodeInstances
-    [NonSerialized] private readonly Dictionary<Guid, GraphNodeLogic> _nodes = new();
+    [NonSerialized] private readonly Dictionary<Guid, GraphNodeLogic> _instantiatedNodes = new();
 
-    // key is instance Id, value is type Id
-    private readonly Dictionary<Guid, InstanceInfo> _nodeInstances = new();
-    private readonly List<AdditionalDefaultInput> _additionalExposedInputs = [];
-    private readonly List<ConnectionEndpoint> _additionalExposedOutputs = [];
+    private readonly SubgraphDefinition _definition;
 
-    private readonly List<Connection> _connections = [];
-
-    public bool TryCreateNodeLogic(Guid typeId, [NotNullWhen(true)] out GraphNodeLogic? nodeLogic,
-        Guid instanceId = default)
+    internal SubGraph(SubgraphDefinition definition)
     {
-        var type = TypeCache.GetTypeById(typeId);
+        _definition = definition;
+        foreach (var instanceInfo in definition.NodeInstances)
+        {
+            if (!TryCreateNodeLogic(instanceInfo, out var nodeLogic))
+            {
+                LogLady.Error($"Failed to create node logic for instance ID {instanceInfo.InstanceId}");
+                continue;
+            }
+            
+            _instantiatedNodes.Add(instanceInfo.InstanceId, nodeLogic);
+        }
+    }
+
+    public bool TryCreateNewNodeLogic(Guid typeId, [NotNullWhen(true)] out GraphNodeLogic? nodeLogic)
+    {
+        var instanceId = Guid.NewGuid();
+        var instanceInfo = new InstanceInfo(typeId, instanceId);
+        _definition.AddNodeInstance(instanceInfo);
+
+        if (TryCreateNodeLogic(instanceInfo, out nodeLogic)) 
+            return true;
+        
+        LogLady.Error($"Failed to create node logic for instance ID {instanceId}");
+        return false;
+    }
+
+    private bool TryCreateNodeLogic(InstanceInfo instanceInfo, [NotNullWhen(true)] out GraphNodeLogic? nodeLogic)
+    {
+        var instanceId = instanceInfo.InstanceId;
+        
+        var typeId = instanceInfo.TypeId;
+        
         try
         {
-            nodeLogic = GraphNodeLogic.CreateNodeLogic(type);
+            nodeLogic = GraphNodeLogic.CreateNodeLogic(typeId);
         }
         catch (Exception e)
         {
@@ -37,22 +61,30 @@ public class SubGraph
             return false;
         }
 
-        if (instanceId == default)
-            instanceId = Guid.NewGuid();
+        if (!_instantiatedNodes.TryAdd(instanceInfo.InstanceId, nodeLogic))
+        {
+            throw new InvalidOperationException("Node with this instance ID already exists");
+        }
 
-        nodeLogic.InstanceId = instanceId;
+        var subGraph = CreateSubgraphFor(typeId);
+        nodeLogic.ApplyRuntimeInfo(subGraph, instanceInfo);
 
-        _nodeInstances.Add(instanceId, new InstanceInfo(typeId, instanceId));
-        _nodes.Add(instanceId, nodeLogic);
+        _instantiatedNodes.Add(instanceId, nodeLogic);
         return true;
+    }
+
+    private static SubGraph CreateSubgraphFor(Guid typeId)
+    {
+        var subgraphDef = GetSubgraphDefinition(typeId);
+        var subgraph = new SubGraph(subgraphDef);
+        return subgraph;
     }
 
     public bool RemoveNode(Guid instanceId)
     {
-        if (!_nodeInstances.Remove(instanceId))
-            return false;
+        _definition.RemoveNodeInstance(instanceId);
 
-        if (!_nodes.Remove(instanceId, out var logic))
+        if (!_instantiatedNodes.Remove(instanceId, out var logic))
             throw new InvalidOperationException("Node instance info was found but not the logic instance");
 
         logic.Destroy();
@@ -64,19 +96,20 @@ public class SubGraph
     {
         var fromEndpoint = new ConnectionEndpoint(fromLogic.InstanceId, fromSlot.Id);
         var toEndpoint = new ConnectionEndpoint(toLogic.InstanceId, toSlot.Id);
-        _connections.Add(new Connection(fromEndpoint, toEndpoint));
+        _definition.AddConnection(new Connection(fromEndpoint, toEndpoint));
     }
 
-    internal void RemoveConnection(GraphNodeLogic fromNode, IOutputSlot fromPort, GraphNodeLogic toNode, IInputSlot toPort)
+    internal void RemoveConnection(GraphNodeLogic fromNode, IOutputSlot fromPort, GraphNodeLogic toNode,
+        IInputSlot toPort)
     {
         var fromEndpoint = new ConnectionEndpoint(fromNode.InstanceId, fromPort.Id);
         var toEndpoint = new ConnectionEndpoint(toNode.InstanceId, toPort.Id);
-        _connections.Remove(new Connection(fromEndpoint, toEndpoint));
+        _definition.RemoveConnection(new Connection(fromEndpoint, toEndpoint));
     }
 
     internal GraphNodeLogic GetNode(Guid fromSlotNodeInstanceId)
     {
-        return _nodes[fromSlotNodeInstanceId];
+        return _instantiatedNodes[fromSlotNodeInstanceId];
     }
 }
 

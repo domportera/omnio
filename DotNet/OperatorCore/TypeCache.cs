@@ -91,6 +91,7 @@ internal static class TypeCache
 }
 
 public readonly record struct TypeAttributes(Guid Guid, string TypeDescription, string TypeCategory);
+public readonly record struct TypeInfo(Type Type, int TypeIndex, FieldInfo[] Fields);
 
 public static class GraphNodeTypes
 {

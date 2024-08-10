@@ -11,11 +11,6 @@ public record InstanceInfo(Guid TypeId, Guid InstanceId)
     
     [NonSerialized]
     public readonly Dictionary<ushort, InputValue> UnconnectedInputValues = new();
-
-    void DoSom()
-    {
-        InstanceInfoJsonContext context;
-    }
 }
 
 public abstract class InputValue
