@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -95,6 +96,7 @@ internal static class TypeCache
     }
 }
 
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class HiddenAttribute : Attribute
 {
 }
@@ -104,6 +106,7 @@ public readonly record struct TypeInfo(Type Type, int TypeIndex, FieldInfo[] Fie
 
 public static class GraphNodeTypes
 {
+    [RequiresUnreferencedCode("This method is used to register types at runtime")]
     public static void RegisterCurrentAssembly()
     {
         var assembly = Assembly.GetCallingAssembly();
@@ -117,14 +120,6 @@ public static class GraphNodeTypes
                 RegisterGraphNodeType(type);
             }
         }
-    }
-
-    public static void RegisterNodeType(Type type)
-    {
-        if (!type.IsAssignableTo(typeof(GraphNodeLogic)))
-            throw new InvalidOperationException($"Type {type.Name} must be descended from {nameof(GraphNodeLogic)}");
-
-        RegisterGraphNodeType(type);
     }
 
     private static void RegisterGraphNodeType(Type type)
