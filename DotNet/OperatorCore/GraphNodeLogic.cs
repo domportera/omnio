@@ -4,20 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace OperatorCore;
 
-internal sealed class RootCanvasNode : GraphNodeLogic
-{
-    protected override void OnInitialize()
-    {
-    }
-
-    public override void Process(double deltaTime)
-    {
-    }
-
-    protected override void OnDestroy()
-    {
-    }
-}
+// empty guid
 
 public abstract partial class GraphNodeLogic
 {

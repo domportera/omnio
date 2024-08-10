@@ -17,6 +17,7 @@ internal static class TypeCache
         GuidAttribute? guidAttribute = null;
         DescriptionAttribute? descriptionAttribute = null;
         CategoryAttribute? categoryAttribute = null;
+        var hidden = false;
         foreach (var attribute in attributes)
         {
             switch (attribute)
@@ -30,6 +31,9 @@ internal static class TypeCache
                 case CategoryAttribute category:
                     categoryAttribute = category;
                     break;
+                case HiddenAttribute _:
+                    hidden = true;
+                    break;
                 default:
                     continue;
             }
@@ -40,6 +44,7 @@ internal static class TypeCache
 
         return new TypeAttributes(
             Guid: Guid.Parse(guidAttribute.Value),
+            hidden,
             TypeDescription: descriptionAttribute?.Description ?? string.Empty,
             TypeCategory: categoryAttribute?.Category ?? string.Empty);
     }
@@ -90,7 +95,11 @@ internal static class TypeCache
     }
 }
 
-public readonly record struct TypeAttributes(Guid Guid, string TypeDescription, string TypeCategory);
+public sealed class HiddenAttribute : Attribute
+{
+}
+
+public readonly record struct TypeAttributes(Guid Guid, bool hidden, string TypeDescription, string TypeCategory);
 public readonly record struct TypeInfo(Type Type, int TypeIndex, FieldInfo[] Fields);
 
 public static class GraphNodeTypes
@@ -121,8 +130,10 @@ public static class GraphNodeTypes
     private static void RegisterGraphNodeType(Type type)
     {
         var typeInfo = TypeCache.GetTypeAttributes(type);
-        NodeLogicAttributesByName.Add(type.FullName!, typeInfo);
         TypeCache.RegisterType(type, typeInfo.Guid);
+        
+        if(!typeInfo.hidden)
+            NodeLogicAttributesByName.Add(type.FullName!, typeInfo);
     }
 
     public static IReadOnlyDictionary<string, TypeAttributes> LogicAttributesByName => NodeLogicAttributesByName;

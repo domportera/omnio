@@ -48,8 +48,16 @@ public partial class GraphEditor : GraphEdit
         _typeInSearch.Visible = false;
 
         _typeInSearch.ItemSelected += OnTypeSelected;
+
+
+        // todo - actually load specific types based on user selection or whatever
+        var instanceInfo = new InstanceInfo(Guid.Empty, Guid.NewGuid());
+        if (!SubGraph.TryCreateInstance(instanceInfo, out var logic))
+        {
+            throw new InvalidOperationException("Failed to create root node");
+        }
         
-        SetRootNode(new RootCanvasNode());
+        SetRootNode(logic);
     }
 
     private void OnTypeSelected(object? _, string selectedTypeName)

@@ -34,12 +34,20 @@ public abstract partial class GraphNodeLogic
         if (fieldLength == 0)
             return;
 
-        HashSet<ushort> ids = new();
+        HashSet<ushort> inputIds = new();
+        HashSet<ushort> outputIds = new();
         for (int i = 0; i < fieldLength; i++)
         {
             var field = fields[i];
-            if (!CheckFieldForSlot(field, out var id))
+            if (!CheckFieldForSlot(field, out var id, out var type))
                 continue;
+            
+            var ids = type switch 
+            {
+                SlotType.Input => inputIds,
+                SlotType.Output => outputIds,
+                _ => throw new InvalidOperationException($"Slot type {type} not yet supported")
+            };
 
             if (!ids.Add(id.Value))
             {
@@ -64,25 +72,35 @@ public abstract partial class GraphNodeLogic
 
         return;
 
-        bool CheckFieldForSlot(FieldInfo field, [NotNullWhen(true)] out ushort? id)
+        bool CheckFieldForSlot(FieldInfo field, [NotNullWhen(true)] out ushort? id, [NotNullWhen(true)] out SlotType? type)
         {
             var fieldType = field.FieldType;
             if (fieldType.IsAssignableTo(typeof(IInputSlot)))
             {
                 id = ValidateAndAdd(field, _inputSlots, _inputSlotGenericType, InputSlotTypeMap);
+                type = SlotType.Input;
                 return true;
             }
-            else if (fieldType.IsAssignableTo(typeof(IOutputSlot)))
+
+            if (fieldType.IsAssignableTo(typeof(IOutputSlot)))
             {
                 id = ValidateAndAdd(field, _outputSlots, _outputSlotGenericType, OutputSlotTypeMap);
+                type = SlotType.Output;
                 return true;
-            }
-            else if (fieldType.IsAssignableTo(typeof(IList<IInputSlot>)))
-            {
             }
 
             id = null;
+            type = null;
             return false;
+
+            if (fieldType.IsAssignableTo(typeof(IList<IInputSlot>)))
+            {
+                type = SlotType.InputList;
+            }
+            else if (fieldType.IsAssignableTo(typeof(IList<IOutputSlot>)))
+            {
+                type = SlotType.OutputList;
+            }
         }
 
         ushort ValidateAndAdd<T>(FieldInfo field, List<T> slots, List<Type> genericTypes,
@@ -182,4 +200,5 @@ public abstract partial class GraphNodeLogic
     private static readonly DynamicConstructorCache<IOutputSlot> OutputConstructorCache = new();
     private static readonly DynamicConstructorCache<IInputSlot> InputConstructorCache = new();
     private static readonly DynamicConstructorCache<GraphNodeLogic> LogicConstructorCache = new();
+    private enum SlotType { Input, Output, InputList, OutputList }
 }

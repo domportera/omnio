@@ -46,10 +46,20 @@ public partial class SubGraph
 
     private bool TryCreateNodeLogic(InstanceInfo instanceInfo, [NotNullWhen(true)] out GraphNodeLogic? nodeLogic)
     {
-        var instanceId = instanceInfo.InstanceId;
-        
+        if (!TryCreateInstance(instanceInfo, out nodeLogic)) 
+            return false;
+
+        if (!_instantiatedNodes.TryAdd(instanceInfo.InstanceId, nodeLogic))
+        {
+            throw new InvalidOperationException("Node with this instance ID already exists");
+        }
+
+        return true;
+    }
+
+    internal static bool TryCreateInstance(InstanceInfo instanceInfo, [NotNullWhen(true)] out GraphNodeLogic? nodeLogic)
+    {
         var typeId = instanceInfo.TypeId;
-        
         try
         {
             nodeLogic = GraphNodeLogic.CreateNodeLogic(typeId);
@@ -61,15 +71,8 @@ public partial class SubGraph
             return false;
         }
 
-        if (!_instantiatedNodes.TryAdd(instanceInfo.InstanceId, nodeLogic))
-        {
-            throw new InvalidOperationException("Node with this instance ID already exists");
-        }
-
         var subGraph = CreateSubgraphFor(typeId);
         nodeLogic.ApplyRuntimeInfo(subGraph, instanceInfo);
-
-        _instantiatedNodes.Add(instanceId, nodeLogic);
         return true;
     }
 
