@@ -49,21 +49,6 @@ public abstract partial class GraphNodeLogic
     protected internal GraphNodeLogic()
     {
     }
-    
-    public void LoadInstanceInfo(InstanceInfo data)
-    {
-        // data includes:
-        // specific input values for this instance (if not connected)
-    }
-
-    internal void SetReady()
-    {
-        if (InstanceIdString == null)
-            throw new InvalidOperationException("Instance ID must be set before calling SetReady");
-
-        OnInitialize();
-        ProcessLoop.Add(this);
-    }
 
     protected abstract void OnInitialize();
     public abstract void Process(double deltaTime);
@@ -99,18 +84,7 @@ public abstract partial class GraphNodeLogic
     private bool _isDestroyed;
 
     private SubGraph? _subGraph;
-
-    internal SubGraph SubGraph
-    {
-        get => _subGraph ??= new SubGraph();
-        set
-        {
-            if(_subGraph != null)
-                throw new InvalidOperationException("SubGraph can only be set once");
-            
-            _subGraph = value;
-        }
-    }
+    internal SubGraph SubGraph => _subGraph!;
 
     internal IReadOnlyList<IInputSlot> InputSlots => _inputSlots;
     internal IReadOnlyList<IOutputSlot> OutputSlots => _outputSlots;

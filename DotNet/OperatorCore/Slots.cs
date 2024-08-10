@@ -27,6 +27,7 @@ internal interface IInputSlot : ISlot
 
     // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Global
     void ReleaseConnection(IOutputSlot fromPort);
+    void ApplyInputValue(InputValue kvpValue);
 }
 
 internal interface IReadOnlySlot<out T> : ISlot

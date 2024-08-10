@@ -5,6 +5,7 @@ using SyntaxReceiver = SourceGeneration.SyntaxReceiverByAttribute
 
 namespace SourceGeneration;
 
+[Generator]
 public partial class JsonSerializerGenerator : ISourceGenerator
 {
     public void Initialize(GeneratorInitializationContext context)

@@ -121,6 +121,11 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
         DisconnectAll();
     }
 
+    void IInputSlot.ApplyInputValue(InputValue valueJson)
+    {
+        // todo
+    }
+
     internal event Action<bool>? ConnectionStateChanged;
 
     event Action<bool> ISlot.ConnectionStateChanged

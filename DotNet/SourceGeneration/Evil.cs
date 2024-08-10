@@ -46,7 +46,7 @@ internal static class Evil
                 Console.WriteLine("--------------------");
                 Console.WriteLine($"JSON GENERATED {source.HintName}\n{source.SourceText}\n");
                 Console.WriteLine("--------------------\n\n");
-                addSource("__Custom" + source.HintName, source.SourceText);
+                addSource("_" + source.HintName, source.SourceText);
             }
         }
     }

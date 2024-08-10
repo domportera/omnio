@@ -1,10 +1,50 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Utilities;
+using Utilities.Logging;
 
 namespace OperatorCore;
 
 public abstract partial class GraphNodeLogic
 {
+    internal void LoadSubGraph(SubGraph? graph, InstanceInfo? instanceInfo)
+    {
+        if(_subGraph != null)
+            throw new InvalidOperationException("Subgraph already loaded");
+        
+        _subGraph = graph ?? new SubGraph();
+        
+        if(instanceInfo == null)
+            return;
+
+        ApplyInstanceInfo(instanceInfo);
+    }
+
+    private void ApplyInstanceInfo(InstanceInfo instanceInfo)
+    {
+        foreach(var kvp in instanceInfo.UnconnectedInputValues)
+        {
+            var potentialSlot = _inputSlots.Find(slot => slot.Id == kvp.Key);
+
+            if (potentialSlot == null)
+            {
+                LogLady.Error($"Failed to find slot with ID {kvp.Key}");
+                continue;
+            }
+
+            potentialSlot.ApplyInputValue(kvp.Value);
+        }
+    }
+
+    internal void SetReady()
+    {
+        if (InstanceIdString == null)
+            throw new InvalidOperationException("Instance ID must be set before calling SetReady");
+
+        OnInitialize();
+        ProcessLoop.Add(this);
+    }
+
     private void Init()
     {
         var nodeType = GetType();
@@ -15,47 +55,58 @@ public abstract partial class GraphNodeLogic
         if (fieldLength == 0)
             return;
 
+        HashSet<ushort> ids = new();
         for (int i = 0; i < fieldLength; i++)
         {
             var field = fields[i];
-            CheckFieldForSlot(field);
+            if (!CheckFieldForSlot(field, out var id))
+                continue;
+
+            if (!ids.Add(id.Value))
+            {
+                throw new InvalidOperationException($"Duplicate slot ID {id} found on {nodeType.Name}");
+            }
         }
 
-        CreateTransformationSlot(outGenericType: typeof(OutputSlot<>), 
-            originals: _inputSlots, 
+        CreateTransformationSlot(outGenericType: typeof(OutputSlot<>),
+            originals: _inputSlots,
             generated: _defaultInputToOutputs,
-            slotGenericArgs: _inputSlotGenericType, 
-            generatedTypeMap: OutputSlotTypeMap, 
+            slotGenericArgs: _inputSlotGenericType,
+            generatedTypeMap: OutputSlotTypeMap,
             constructorCache: OutputConstructorCache);
-        
+
         CreateTransformationSlot(
-            outGenericType: typeof(InputSlot<>), 
-            originals: _outputSlots, 
+            outGenericType: typeof(InputSlot<>),
+            originals: _outputSlots,
             generated: _defaultOutputToInputs,
-            slotGenericArgs: _outputSlotGenericType, 
-            generatedTypeMap: InputSlotTypeMap, 
+            slotGenericArgs: _outputSlotGenericType,
+            generatedTypeMap: InputSlotTypeMap,
             constructorCache: InputConstructorCache);
 
         return;
 
-        void CheckFieldForSlot(FieldInfo field)
+        bool CheckFieldForSlot(FieldInfo field, [NotNullWhen(true)] out ushort? id)
         {
             var fieldType = field.FieldType;
             if (fieldType.IsAssignableTo(typeof(IInputSlot)))
             {
-                ValidateAndAdd(field, _inputSlots, _inputSlotGenericType, InputSlotTypeMap);
+                id = ValidateAndAdd(field, _inputSlots, _inputSlotGenericType, InputSlotTypeMap);
+                return true;
             }
             else if (fieldType.IsAssignableTo(typeof(IOutputSlot)))
             {
-                ValidateAndAdd(field, _outputSlots, _outputSlotGenericType, OutputSlotTypeMap);
+                id = ValidateAndAdd(field, _outputSlots, _outputSlotGenericType, OutputSlotTypeMap);
+                return true;
             }
             else if (fieldType.IsAssignableTo(typeof(IList<IInputSlot>)))
             {
-                
             }
+
+            id = null;
+            return false;
         }
 
-        void ValidateAndAdd<T>(FieldInfo field, List<T> slots, List<Type> genericTypes,
+        ushort ValidateAndAdd<T>(FieldInfo field, List<T> slots, List<Type> genericTypes,
             Dictionary<Type, Type> typeMap) where T : ISlot
         {
             if (!field.IsInitOnly)
@@ -76,12 +127,15 @@ public abstract partial class GraphNodeLogic
             var genericTypeArg = slotType.GenericTypeArguments[0];
             genericTypes.Add(genericTypeArg);
             typeMap.TryAdd(genericTypeArg, slotType);
+            return slot.Id;
         }
     }
 
-    private static void CreateTransformationSlot<TIn, TOut>(Type outGenericType, List<TIn> originals, List<TOut> generated, 
-        List<Type> slotGenericArgs, Dictionary<Type, Type> generatedTypeMap, DynamicConstructorCache<TOut> constructorCache) 
-        where TIn : ISlot 
+    private static void CreateTransformationSlot<TIn, TOut>(Type outGenericType, List<TIn> originals,
+        List<TOut> generated,
+        List<Type> slotGenericArgs, Dictionary<Type, Type> generatedTypeMap,
+        DynamicConstructorCache<TOut> constructorCache)
+        where TIn : ISlot
         where TOut : ISlot
     {
 #if DEBUG
@@ -92,7 +146,7 @@ public abstract partial class GraphNodeLogic
             throw new InvalidOperationException("Generic type must be generic and undefined");
 
         var interfaces = outGenericType.GetInterfaces();
-        if(!interfaces.Contains(typeof(ISlot)) )
+        if (!interfaces.Contains(typeof(ISlot)))
         {
             throw new InvalidOperationException($"Generic type must implement the {typeof(ISlot)} interface");
         }

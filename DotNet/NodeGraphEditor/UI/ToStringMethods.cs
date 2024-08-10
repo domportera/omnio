@@ -27,11 +27,11 @@ internal static class ToStringMethods
                 { typeof(int), new ToStringMethod<int>((in int val) => val.ToString(CultureInfo.InvariantCulture)) },
                 {
                     typeof(float),
-                    new ToStringMethod<float>((in float val) => val.ToString(CultureInfo.InvariantCulture))
+                    new ToStringMethod<float>((in float val) => val.ToString("f3", CultureInfo.InvariantCulture))
                 },
                 {
                     typeof(double),
-                    new ToStringMethod<double>((in double val) => val.ToString(CultureInfo.InvariantCulture))
+                    new ToStringMethod<double>((in double val) => val.ToString("f3", CultureInfo.InvariantCulture))
                 },
                 { typeof(long), new ToStringMethod<long>((in long val) => val.ToString(CultureInfo.InvariantCulture)) },
                 {

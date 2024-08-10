@@ -20,8 +20,11 @@ public record InstanceInfo(Guid TypeId, Guid InstanceId)
 
 public abstract class InputValue
 {
+    
 }
 
+[Serializable]
 public class InputValue<T> : InputValue
 {
+    public T Value;
 }

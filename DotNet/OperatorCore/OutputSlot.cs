@@ -152,7 +152,7 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
 file sealed class InputSlotWrapper<TInput, TOutput>(InputSlot<TInput> inputSlot) : IInputSlot<TOutput>
     where TOutput : TInput
 {
-    public TOutput Value
+    public TOutput? Value
     {
         set => inputSlot.Value = value;
     }

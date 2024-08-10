@@ -56,7 +56,7 @@ public static class ClassGeneration
             var jsonContextClassName = className + "JsonContext";
             var fullyQualifiedClassName = fullNamespace + "." + className;
 
-            string jsonContextName = typeof(JsonSerializerContext).FullName!;
+            const string jsonContextName = "System.Text.Json.Serialization.JsonSerializerContext";
 
             //todo - add seriap8zatioj attribute for field types 
             return SF.ClassDeclaration(jsonContextClassName)

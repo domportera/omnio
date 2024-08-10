@@ -39,8 +39,8 @@ public sealed partial class CustomGraphNode : GraphNode
         
         for (var i = 0; i < slotCount; i++)
         {
-            var ((inputEnable, (inputType, inputTypeIndex, _), inputSlot),
-                (outputEnable, (outputType, outputTypeIndex, _), outputSlot)) = slots[i];
+            var ((inputEnable, (inputType, inputTypeIndex, _)),
+                (outputEnable, (outputType, outputTypeIndex, _))) = slots[i];
 
             unsafe
             {
@@ -85,7 +85,7 @@ public sealed partial class CustomGraphNode : GraphNode
                 return default;
 
             var slot = slots[i];
-            return new SlotInfo(true, TypeCache.GetTypeInfo(slot.Type), slot);
+            return new SlotInfo(true, TypeCache.GetTypeInfo(slot.Type));
         }
     }
 
@@ -109,4 +109,4 @@ public sealed partial class CustomGraphNode : GraphNode
 }
 internal readonly record struct SlotInfoIO(SlotInfo Input, SlotInfo Output);
 
-internal readonly record struct SlotInfo(bool Enable, TypeInfo TypeInfo, ISlot? Slot);
+internal readonly record struct SlotInfo(bool Enable, TypeInfo TypeInfo);

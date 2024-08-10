@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace SourceGeneration;
 
-[Generator]
+//[Generator]
 public class JsonIncrementalGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -79,15 +79,9 @@ public class JsonIncrementalGenerator : IIncrementalGenerator
         return new SymbolWithSyntax(symbolInfo, syntax);
     }
 
-    private readonly struct SymbolWithSyntax
+    private readonly struct SymbolWithSyntax(ISymbol? symbol, TypeDeclarationSyntax syntax)
     {
-        public readonly ISymbol? Symbol;
-        public readonly TypeDeclarationSyntax Syntax;
-
-        public SymbolWithSyntax(ISymbol? symbol, TypeDeclarationSyntax syntax)
-        {
-            Symbol = symbol;
-            Syntax = syntax;
-        }
+        public readonly ISymbol? Symbol = symbol;
+        public readonly TypeDeclarationSyntax Syntax = syntax;
     }
 }
