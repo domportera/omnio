@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace SourceGeneration;
@@ -57,5 +58,28 @@ public static class Utilities
         namespaceString = sb.ToString(0, sb.Length - 1);
         sb.Clear();
         return true;
+    }
+
+    public static SyntaxKind GetScope(TypeDeclarationSyntax syntax)
+    {
+        // get private/public/protected/internal
+        var modifiers = syntax.Modifiers;
+        
+        foreach (var modifier in modifiers)
+        {
+            var kind = modifier.Kind() switch
+            {
+                SyntaxKind.PrivateKeyword => SyntaxKind.InternalKeyword,
+                SyntaxKind.ProtectedKeyword => SyntaxKind.ProtectedKeyword,
+                SyntaxKind.PublicKeyword => SyntaxKind.PublicKeyword,
+                SyntaxKind.InternalKeyword => SyntaxKind.InternalKeyword,
+                _ => SyntaxKind.None
+            };
+            
+            if (kind != SyntaxKind.None)
+                return kind;
+        }
+
+        return SyntaxKind.InternalKeyword;
     }
 }

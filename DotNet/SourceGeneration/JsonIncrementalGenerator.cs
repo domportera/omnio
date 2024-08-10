@@ -42,7 +42,8 @@ public class JsonIncrementalGenerator : IIncrementalGenerator
             return;
         }
 
-        var tree = ClassGeneration.GenerateJsonSerializable(namespaceString, symbol.Name, "Incrementally generated");
+        var accessModifier = Utilities.GetScope(symbolWithSyntax.Syntax);
+        var tree = ClassGeneration.GenerateJsonSerializable(namespaceString, symbol.Name, accessModifier);
 
         if (!tree.TryGetText(out var text))
         {

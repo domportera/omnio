@@ -40,7 +40,8 @@ public partial class JsonSerializerGenerator : ISourceGenerator
             if (!Utilities.TryGetNamespace(symbol, namespaces, sb, out var namespaceString))
                 continue;
 
-            var tree = ClassGeneration.GenerateJsonSerializable(namespaceString, symbol.Name, "Generated at build time");
+            var accessModifier = Utilities.GetScope(syntax);
+            var tree = ClassGeneration.GenerateJsonSerializable(namespaceString, symbol.Name, accessModifier);
 
             if (!tree.TryGetText(out var text))
             {

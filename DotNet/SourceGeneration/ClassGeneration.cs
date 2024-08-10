@@ -9,7 +9,7 @@ namespace SourceGeneration;
 
 public static class ClassGeneration
 {
-    public static SyntaxTree GenerateJsonSerializable(string fullNamespace, string className, string comment)
+    public static SyntaxTree GenerateJsonSerializable(string fullNamespace, string className, SyntaxKind accessModifier)
     {
         // todo - runtime types and using statements
         // function to be called "CreateClassWithAttributes or something like that
@@ -23,7 +23,7 @@ public static class ClassGeneration
             root: SF.CompilationUnit()
                 .WithUsings(SF.List(usingDirectives))
                 .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(
-                        CreateClassDeclaration(fullNamespace, className, SyntaxKind.PublicKeyword)
+                        CreateClassDeclaration(fullNamespace, className, accessModifier)
                     )
                 )
                 .NormalizeWhitespace(),
