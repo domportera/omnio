@@ -19,8 +19,12 @@ internal sealed class DefaultInPortControl<T> : PortControl
         }
 
         var lineEditDisplay = DefaultTextDisplay.CreateLineEdit("", HorizontalAlignment.Left);
+        
+        var currentValue = GetSlot<InputSlot<T>>().Value;
+        var currentValueAsString = _valueToString(currentValue);
+        lineEditDisplay.SetTextSilently(currentValueAsString);
+        
         _textDisplay = lineEditDisplay;
-
 
         lineEditDisplay.TextChanged += text =>
         {
