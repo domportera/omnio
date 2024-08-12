@@ -66,29 +66,34 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
 
     public readonly T? DefaultValue;
     public event Action? ValueChanged;
+    void ISlot.ActAsTransformationSlotFor(ISlot slot)
+    {
+        if(_transformationSlot != null)
+            throw new InvalidOperationException("Transformation slot already set - multiple connections not yet supported");
+        
+        if(slot is not IOutputSlot outputSlotUntyped)
+            throw new InvalidOperationException("Cannot act as transformation slot for a slot that is not an output slot");
+        
+        if(outputSlotUntyped is not OutputSlot<T> outputSlot)
+            throw new InvalidOperationException("Cannot act as transformation slot for a slot that is not an output slot of the same type");
+        
+        Value = outputSlot.Value;
+        ValueChanged += () => outputSlot.Value = Value;
+        _transformationSlot = outputSlot;
+    }
+
     public object LockObject { get; } = new();
 
-    bool IInputSlot.TryConnectTo(IOutputSlot outputSlot, bool isTransformation)
+    bool IInputSlot.TryAcceptConnectionFrom(IOutputSlot outputSlot)
     {
-        if (!outputSlot.TryConnectTo(this))
+        if (!outputSlot.TryConnectTo(this, false))
             return false;
 
-        if (!isTransformation)
-        {
-            if (_connectedOutputSlot != null)
-                DisconnectAll();
+        if (_connectedOutputSlot != null)
+            DisconnectAll();
 
-            _connectedOutputSlot = outputSlot;
-            ConnectionStateChanged?.Invoke(true);
-        }
-        else
-        {
-            if (_transformationSlot != null)
-                throw new InvalidOperationException(
-                    "Transformation slot already set - multiple connections not yet supported");
-
-            _transformationSlot = outputSlot;
-        }
+        _connectedOutputSlot = outputSlot;
+        ConnectionStateChanged?.Invoke(true);
 
         return true;
     }
@@ -110,9 +115,7 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
     {
         if (slot == _transformationSlot)
         {
-            _transformationSlot.RemoveConnection(this);
-            _transformationSlot = null;
-            return;
+            throw new InvalidOperationException("Cannot release connection to a transformation slot");
         }
 
         if (_connectedOutputSlot != slot)
@@ -124,6 +127,19 @@ public sealed class InputSlot<T> : IInputSlot<T>, IInputSlot, IReadOnlySlot<T>
     void IInputSlot.ApplyInputValue(InputValue valueJson)
     {
         // todo
+    }
+
+    void IInputSlot.ForceUpdate()
+    {
+        // for use only when the owning node is created
+        try
+        {
+            ValueChanged?.Invoke();
+        }
+        catch (Exception e)
+        {
+            LogLady.Error(e);
+        }
     }
 
     internal event Action<bool>? ConnectionStateChanged;

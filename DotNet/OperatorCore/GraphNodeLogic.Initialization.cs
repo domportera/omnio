@@ -21,6 +21,10 @@ public abstract partial class GraphNodeLogic
             throw new InvalidOperationException("Instance ID must be set before calling SetReady");
 
         OnInitialize();
+
+        foreach (var input in _inputSlots)
+            input.ForceUpdate();
+        
         ProcessLoop.Add(this);
     }
 
@@ -153,7 +157,7 @@ public abstract partial class GraphNodeLogic
         for (int i = 0; i < originals.Count; i++)
         {
             // create "barrier" slots to allow an input slot to be connected to nodes inside the current node
-            var inputSlot = originals[i];
+            var originalSlot = originals[i];
             var genericArg = slotGenericArgs[i];
 
             if (!generatedTypeMap.TryGetValue(genericArg, out var slotType))
@@ -164,10 +168,10 @@ public abstract partial class GraphNodeLogic
             }
 
             var constructor = constructorCache.GetDefaultConstructor(slotType);
-            var slot = constructor();
+            var newSlot = constructor();
 
-            slot.ActAsTransformationSlot(inputSlot);
-            generated.Add(slot);
+            newSlot.ActAsTransformationSlotFor(originalSlot);
+            generated.Add(newSlot);
         }
     }
 

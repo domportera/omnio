@@ -8,26 +8,12 @@ internal interface IInputSlot<in T>
 
 internal interface IInputSlot : ISlot
 {
-    public bool TryConnectTo(IOutputSlot outputSlot, bool isTransformation = false);
-
-    void ISlot.ActAsTransformationSlot(ISlot slot) => ActAsTransformationSlot((IOutputSlot)slot);
-    void ActAsTransformationSlot(IOutputSlot slot)
-    {
-        #if DEBUG
-        if(Type != slot.Type)
-            throw new InvalidOperationException("Cannot mimic a slot with a different type");
-        #endif
-        
-        Name = slot.Name;
-        Id = slot.Id;
-        
-        if(!TryConnectTo(slot, true))
-            throw new InvalidOperationException("Failed to connect mimicked slot");
-    }
+    public bool TryAcceptConnectionFrom(IOutputSlot outputSlot);
 
     // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Global
     void ReleaseConnection(IOutputSlot fromPort);
     void ApplyInputValue(InputValue kvpValue);
+    void ForceUpdate();
 }
 
 internal interface IReadOnlySlot<out T> : ISlot
@@ -44,27 +30,12 @@ public interface ISlot
     event Action ValueChanged;
     event Action<bool> ConnectionStateChanged;
 
-    void ActAsTransformationSlot(ISlot slot);
+    void ActAsTransformationSlotFor(ISlot slot);
     public object LockObject { get; }
 }
 
 internal interface IOutputSlot : ISlot
 {
-    public bool TryConnectTo<TInput>(InputSlot<TInput> inputSlot);
+    public bool TryConnectTo<TInput>(InputSlot<TInput> inputSlot, bool isTransformingMe);
     public bool RemoveConnection<TInput>(InputSlot<TInput> inputSlot);
-
-    void ISlot.ActAsTransformationSlot(ISlot slot) => ActAsTransformationSlot((IInputSlot)slot);
-    void ActAsTransformationSlot(IInputSlot slot)
-    {
-        #if DEBUG
-        if(Type != slot.Type)
-            throw new InvalidOperationException("Cannot mimic a slot with a different type");
-        #endif
-        
-        Name = slot.Name;
-        Id = slot.Id;
-        
-        if(!slot.TryConnectTo(this, true))
-            throw new InvalidOperationException("Failed to connect mimicked slot");
-    }
 }

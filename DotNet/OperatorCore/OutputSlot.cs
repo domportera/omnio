@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using Utilities.Logging;
 
 // ReSharper disable ForCanBeConvertedToForeach
@@ -90,8 +91,23 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
         add => ConnectionStateChanged += value;
         remove => ConnectionStateChanged -= value;
     }
-    
-    
+
+
+    void ISlot.ActAsTransformationSlotFor(ISlot slot)
+    {
+        if(_transformationSlot != null)
+            throw new InvalidOperationException("Transformation slot already set");
+        
+        if(slot is not IInputSlot inputSlotUntyped)
+            throw new InvalidOperationException("Transformation slot must be an input slot");
+        
+        if (inputSlotUntyped is not InputSlot<T> inputSlot)
+            throw new InvalidOperationException("Transformation slot must be an input slot of the same type");
+        
+        Value = inputSlot.Value;
+        inputSlot.ValueChanged += () => Value = inputSlot.Value;
+        _transformationSlot = inputSlot;
+    }
 
     public object LockObject { get; } = new();
 
@@ -112,7 +128,8 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
         return false;
     }
 
-    bool IOutputSlot.TryConnectTo<TInput>(InputSlot<TInput> inputSlot)
+    [RequiresDynamicCode("Calls System.Type.MakeGenericType(params Type[])")]
+    bool IOutputSlot.TryConnectTo<TInput>(InputSlot<TInput> inputSlot, bool isTransformingMe)
     {
         ArgumentNullException.ThrowIfNull(inputSlot);
 
@@ -121,8 +138,13 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
         if (inputSlot is InputSlot<T> compatible)
         {
             _connectedInputSlots.Add(compatible);
-            compatible.Value = _value;
+            AssignValueFromNewConnection(compatible, isTransformingMe);
             return true;
+        }
+
+        if (isTransformingMe)
+        {
+            throw new InvalidOperationException("Type mismatch on transformation slot");
         }
 
         if (!typeof(T).IsAssignableTo(typeof(TInput)))
@@ -131,7 +153,7 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
         var wrapperType = typeof(InputSlotWrapper<,>).MakeGenericType(typeof(TInput), typeof(T));
         try
         {
-            // optimize - compile this as a constructor expression?
+            // todo - optimize - compile this as a constructor expression?
             var wrapper = Activator.CreateInstance(wrapperType, inputSlot);
             if (wrapper == null)
                 return false;
@@ -147,7 +169,19 @@ public sealed class OutputSlot<T> : IOutputSlot, IReadOnlySlot<T>
         }
     }
 
+    private void AssignValueFromNewConnection(InputSlot<T> inputSlot, bool isTransformingMe)
+    {
+        if (!isTransformingMe)
+        {
+            inputSlot.Value = _value;
+            return;
+        }
+        
+        inputSlot.ValueChanged += () => Value = inputSlot.Value;
+    }
+
     private readonly List<IInputSlot<T>> _connectedInputSlots = [];
+    private InputSlot<T>? _transformationSlot;
     
     // for use with reflection only - needs a default constructor
     // ReSharper disable once UnusedMember.Local

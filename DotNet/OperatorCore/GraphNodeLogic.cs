@@ -78,7 +78,7 @@ public abstract partial class GraphNodeLogic
         var fromPort = fromNode.GetOutputPortInternal(fromPortInfo.PortIndex);
         var toPort = toNode.GetInputPortInternal(toPortInfo.PortIndex);
 
-        if (!toPort.TryConnectTo(fromPort))
+        if (!toPort.TryAcceptConnectionFrom(fromPort))
         {
             return false;
         }
