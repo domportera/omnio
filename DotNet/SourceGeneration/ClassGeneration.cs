@@ -58,7 +58,7 @@ public static class ClassGeneration
 
             const string jsonContextName = "System.Text.Json.Serialization.JsonSerializerContext";
 
-            //todo - add seriap8zatioj attribute for field types 
+            //todo - add serialization attribute for field types 
             return SF.ClassDeclaration(jsonContextClassName)
                 .WithAttributeLists(SF.List(
                         [
@@ -72,7 +72,7 @@ public static class ClassGeneration
                                         SF.Token(SyntaxKind.CommaToken), SF.AttributeArgument(SF.MemberAccessExpression(
                                                 SyntaxKind.SimpleMemberAccessExpression,
                                                 SF.IdentifierName("JsonSourceGenerationMode"),
-                                                SF.IdentifierName("Serialization")))
+                                                SF.IdentifierName("Default")))
                                             .WithNameEquals(SF.NameEquals(SF.IdentifierName("GenerationMode"))),
                                         SF.Token(SyntaxKind.CommaToken), SF.AttributeArgument(SF.MemberAccessExpression(
                                                 SyntaxKind.SimpleMemberAccessExpression,
