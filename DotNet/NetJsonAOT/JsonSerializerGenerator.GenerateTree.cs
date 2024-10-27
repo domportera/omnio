@@ -1,11 +1,7 @@
-﻿using System.Text;
-using System.Text.Json.Serialization;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace SourceGeneration;
+namespace NetJsonAOT.Generators;
 
 public partial class JsonSerializerGenerator
 {

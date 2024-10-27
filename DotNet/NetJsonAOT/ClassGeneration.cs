@@ -1,11 +1,10 @@
 ﻿using System.Text;
-using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using SF = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace SourceGeneration;
+namespace NetJsonAOT.Generators;
 
 public static class ClassGeneration
 {
@@ -19,9 +18,19 @@ public static class ClassGeneration
             SF.UsingDirective(SF.ParseName("System.Text.Json.Serialization"))
         };
 
+        var namespaceLastPart = $"{className}.JsonGen";
+        var generatedNamespace = string.IsNullOrWhiteSpace(fullNamespace) 
+            ? namespaceLastPart 
+            : $"{fullNamespace}.{namespaceLastPart}";
+        
         var tree = SF.SyntaxTree(
             root: SF.CompilationUnit()
                 .WithUsings(SF.List(usingDirectives))
+                
+                // add namespace of original type
+                .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(
+                    SF.NamespaceDeclaration(SF.ParseName(generatedNamespace)))
+                )
                 .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(
                         CreateClassDeclaration(fullNamespace, className, accessModifier)
                     )
@@ -55,6 +64,8 @@ public static class ClassGeneration
 
             var jsonContextClassName = className + "JsonContext";
             var fullyQualifiedClassName = fullNamespace + "." + className;
+            
+            GeneratedTypes.AddType(fullyQualifiedClassName, jsonContextClassName);
 
             const string jsonContextName = "System.Text.Json.Serialization.JsonSerializerContext";
 

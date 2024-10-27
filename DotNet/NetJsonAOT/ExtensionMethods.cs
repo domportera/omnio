@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 
-namespace SourceGeneration;
+namespace NetJsonAOT.Generators;
 
 public static class ExtensionMethods
 {

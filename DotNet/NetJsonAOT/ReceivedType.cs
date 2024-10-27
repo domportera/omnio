@@ -1,10 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace SourceGeneration;
+namespace NetJsonAOT.Generators;
 
 public readonly record struct ReceivedType<TSyntax> where TSyntax : MemberDeclarationSyntax
 {

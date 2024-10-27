@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace SourceGeneration;
+namespace NetJsonAOT.Generators;
 
 //[Generator]
 public class JsonIncrementalGenerator : IIncrementalGenerator

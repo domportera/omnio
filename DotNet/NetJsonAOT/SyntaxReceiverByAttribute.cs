@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace SourceGeneration;
+namespace NetJsonAOT.Generators;
 
 /// <summary>
 /// A syntax receiver that listens for members with a specific attribute.

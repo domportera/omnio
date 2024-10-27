@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
-namespace SourceGeneration;
+namespace NetJsonAOT.Generators;
 
 // thank you to https://isadorasophia.com/articles/serialization/#6
 // for this dastardly plan
